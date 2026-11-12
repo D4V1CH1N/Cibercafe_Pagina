@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="theme-color" content="#070312">
+    <title>LevelUp Arcade Bar - PWA Movil</title>
+    <link rel="manifest" href="../manifest.json">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('../sw.js');
+            });
+        }
+    </script>
+</head>
+
+<body>
+
+    <div id="toast-alert">
+        <div class="toast-titulo" id="toast-titulo">NOTIFICACION DEL SISTEMA</div>
+        <div class="toast-cuerpo" id="toast-cuerpo">Operacion completada correctamente.</div>
+    </div>
+
+    <div id="app-hud">
+
+        <header id="hud-header">
+            <div class="hud-left">
+                <div class="avatar-box">LVL 99</div>
+                <div class="perfil-info">
+                    <span class="jugador-nombre" id="hud-jugador">Jugador: Invitado</span>
+                    <span class="jugador-estado">Estado: En Linea</span>
+                </div>
+            </div>
+
+            <div class="hud-center">
+                <span class="etiqueta-hud">ZONA</span>
+                <span id="indicador-tema">Lobby</span>
+            </div>
+
+            <div class="hud-right">
+                <div class="moneda-box">
+                    <span class="moneda-label">Items:</span>
+                    <span id="hud-items">0</span>
+                </div>
+                <div class="moneda-box moneda-oro">
+                    <span id="hud-total">0</span>
+                    <span>Bs</span>
+                </div>
+                <button id="btn-tema" class="btn-hud-top" data-accion="Alternar Modo Noche / Claro">Modo Claro</button>
+            </div>
+        </header>
+
+        <nav class="barra-navegacion-tactil">
+            <button class="tab-tactil btn-nav-hud activo" data-vista="vista-lobby" data-tema="" data-titulo="Lobby">Lobby</button>
+            <button class="tab-tactil btn-nav-hud" data-vista="vista-consolas" data-consola="todos" data-tema="playstation" data-titulo="Consolas">Consolas</button>
+            <button class="tab-tactil btn-nav-hud" data-vista="vista-pcs" data-tema="pc" data-titulo="PCs RTX">PCs</button>
+            <button class="tab-tactil btn-nav-hud" data-vista="vista-arcades" data-tema="arcade" data-titulo="Arcades">Arcades</button>
+            <button class="tab-tactil btn-nav-hud" data-vista="vista-snacks" data-tema="comida" data-titulo="Snacks">Snacks</button>
+            <button class="tab-tactil btn-nav-hud" data-vista="vista-bitacora" data-tema="" data-titulo="Bitacora">Bitacora</button>
+        </nav>
+
+        <main id="hud-main">
+
+            <section id="vista-lobby" class="vista-hud vista-activa">
+                <div class="lobby-grid">
+
+                    <div class="panel-hud panel-oferta-lobby" id="tarjeta-oferta-relampago">
+                        <div class="badge-promo-activa" id="estado-promo-badge">OFERTA RELAMPAGO ACTIVA</div>
+                        <h3 class="titulo-promo-lobby">PS5 + 4 CONTROLES (2H) + PIZZA FAMILIAR GRATIS</h3>
+                        <p class="desc-promo-lobby">Contrata 1 PS5 con 4 controles (minimo 2h) antes de que acabe el tiempo y llevate 1 Pizza Familiar GRATIS.</p>
+                        <div class="reloj-promo-contenedor">
+                            <span class="reloj-label">EXPIRA EN:</span>
+                            <div id="timer-oferta-10m">10:00</div>
+                        </div>
+                        <button id="btn-reclamar-promo"
+                            data-nombre="PROMO RELAMPAGO: PS5 (2h + 4 Controles) + Pizza Familiar 8 Porciones GRATIS"
+                            data-precio="45">
+                            Reclamar Promo (45 Bs + Pizza GRATIS)
+                        </button>
+                    </div>
+
+                    <div class="showcase-central">
+                        <div class="showcase-top">
+                            <h1 class="showcase-titulo">LEVELUP ARCADE BAR</h1>
+                            <p class="showcase-sub">Plataforma movil PWA para reservas y pedidos en tiempo real.</p>
+                        </div>
+
+                        <div class="stats-rapidas">
+                            <button type="button" class="card-acceso-rapido btn-nav-hud" data-vista="vista-consolas" data-consola="todos" data-tema="playstation" data-titulo="Hangar de Consolas">
+                                <span class="stat-num">Consolas (35+)</span>
+                                <span class="stat-label">PS5, PS4, Xbox y Switch</span>
+                            </button>
+                            <button type="button" class="card-acceso-rapido btn-nav-hud" data-vista="vista-pcs" data-tema="pc" data-titulo="Zona PC Gamer RTX">
+                                <span class="stat-num">PCs RTX (20)</span>
+                                <span class="stat-label">Ultra, Alta y Media</span>
+                            </button>
+                            <button type="button" class="card-acceso-rapido btn-nav-hud" data-vista="vista-arcades" data-tema="arcade" data-titulo="Maquinas Arcade Retro">
+                                <span class="stat-num">Arcades (25)</span>
+                                <span class="stat-label">Gabinetes Clasicos</span>
+                            </button>
+                            <button type="button" class="card-acceso-rapido btn-nav-hud" data-vista="vista-snacks" data-tema="comida" data-titulo="Comida y Snacks">
+                                <span class="stat-num">Snacks &amp; Combos</span>
+                                <span class="stat-label">Entrega a tu puesto</span>
+                            </button>
+                        </div>
+
+                        <div class="buscador-box">
+                            <label for="buscador-rapido" class="label-buscador">RADAR DE BUSQUEDA</label>
+                            <input type="text" id="buscador-rapido" placeholder="Buscar PS5, Xbox, PC, KOF, Pizza...">
+                            <div id="sugerencias-busqueda">
+                                <div class="item-sugerencia" data-keywords="consolas ps5 playstation fc27 tekken" data-vista="vista-consolas" data-consola="ps5" data-tema="playstation" data-titulo="PlayStation 5">
+                                    <span>PlayStation 5 (10 Estaciones)</span>
+                                    <span class="sug-precio">15 Bs/h</span>
+                                </div>
+                                <div class="item-sugerencia" data-keywords="xbox series x forza halo" data-vista="vista-consolas" data-consola="xboxsx" data-tema="xbox" data-titulo="Xbox Series X">
+                                    <span>Xbox Series X (10 Estaciones)</span>
+                                    <span class="sug-precio">15 Bs/h</span>
+                                </div>
+                                <div class="item-sugerencia" data-keywords="pc gamer rtx 4080 ultra" data-vista="vista-pcs" data-tema="pc" data-titulo="Zona PC Gamer RTX">
+                                    <span>PCs Gamer RTX 4080 (Gama Ultra)</span>
+                                    <span class="sug-precio">25 Bs/h</span>
+                                </div>
+                                <div class="item-sugerencia" data-keywords="arcade kof metal slug sf2" data-vista="vista-arcades" data-tema="arcade" data-titulo="Salon Arcade Retro">
+                                    <span>Salon Arcade Retro (25 Gabinetes)</span>
+                                    <span class="sug-precio">2 Bs/ficha</span>
+                                </div>
+                                <div class="item-sugerencia" data-keywords="hamburguesa pizza snack alitas" data-vista="vista-snacks" data-tema="comida" data-titulo="Comida y Snacks">
+                                    <span>Menu de Snacks y Combos Gamer</span>
+                                    <span class="sug-precio">Desde 10 Bs</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button id="btn-like-lobby" data-accion="Like al Cibercafe">Dar Like (<span id="contador-likes">0</span>)</button>
+                    </div>
+
+                    <div class="panel-hud panel-carrito-lobby">
+                        <div class="cabecera-panel-der">
+                            <h3 class="titulo-panel">INVENTARIO DE ORDEN</h3>
+                            <button id="btn-vaciar-carrito" data-accion="Vaciar Carrito">Limpiar</button>
+                        </div>
+                        <ul id="lista-carrito">
+                            <li class="carrito-vacio">Sin reservas ni snacks activos.</li>
+                        </ul>
+                        <div class="pie-carrito-fijo">
+                            <div class="caja-total-lobby">
+                                <span>TOTAL:</span>
+                                <strong id="lobby-total-texto">0 Bs</strong>
+                            </div>
+                            <button id="btn-abrir-modal" data-accion="Abrir Modal de Confirmacion">CONFIRMAR PEDIDO</button>
+                        </div>
+                    </div>
+
+                    <div class="panel-hud panel-mini-log">
+                        <h3 class="titulo-panel">REGISTRO DE EVENTOS</h3>
+                        <div id="log-mini" class="contenedor-log-mini"></div>
+                    </div>
+
+                </div>
+
+                <footer class="hud-dock">
+                    <div class="bloque-redes-sociales">
+                        <span class="dock-sub">REDES SOCIALES</span>
+                        <div class="redes-links">
+                            <a href="#" class="link-red-social">Facebook</a>
+                            <a href="#" class="link-red-social">Instagram</a>
+                            <a href="https://wa.me/59100000000" target="_blank" rel="noopener noreferrer" class="link-red-social">WhatsApp</a>
+                        </div>
+                    </div>
+                </footer>
+            </section>
+
+            <section id="vista-consolas" class="vista-hud">
+                <div class="barra-vista-interna">
+                    <button class="btn-volver" data-accion="Volver al Lobby">&lt; Lobby</button>
+                    <h2 class="titulo-vista">CONSOLAS</h2>
+                    <div class="filtros-consolas">
+                        <button class="btn-filtro-consola activo" data-consola="todos" data-tema="playstation">Todas</button>
+                        <button class="btn-filtro-consola" data-consola="ps5" data-tema="playstation">PS5</button>
+                        <button class="btn-filtro-consola" data-consola="ps4" data-tema="playstation">PS4</button>
+                        <button class="btn-filtro-consola" data-consola="ps3" data-tema="playstation">PS3</button>
+                        <button class="btn-filtro-consola" data-consola="xboxsx" data-tema="xbox">Xbox SX</button>
+                        <button class="btn-filtro-consola" data-consola="xboxone" data-tema="xboxone">Xbox One</button>
+                        <button class="btn-filtro-consola" data-consola="xbox360" data-tema="xbox360">Xbox 360</button>
+                        <button class="btn-filtro-consola" data-consola="switch" data-tema="switch">Switch</button>
+                    </div>
+                </div>
+
+                <div class="contenedor-scroll-vista" id="contenedor-plataformas-consolas">
+                    <div class="bloque-plataforma item-consola" data-consola="ps5" data-plataforma="playstation" data-nombre="PlayStation 5" data-precio="15">
+                        <div class="cabecera-acordeon">
+                            <div class="info-cabecera-consola">
+                                <h3>PlayStation 5 (10 Estaciones)</h3>
+                                <span class="tarifa-tag">15 Bs/h | 4K 120Hz</span>
+                            </div>
+                            <button class="accordion-btn abierto" data-detalle="PlayStation 5">[-]</button>
+                        </div>
+                        <div class="accordion-panel panel-visible">
+                            <div class="grilla-estaciones-compacta" data-generar-consola="ps5" data-prefijo="PS5" data-precio="15"></div>
+                        </div>
+                    </div>
+
+                    <div class="bloque-plataforma item-consola" data-consola="ps4" data-plataforma="playstation" data-nombre="PlayStation 4" data-precio="12">
+                        <div class="cabecera-acordeon">
+                            <div class="info-cabecera-consola">
+                                <h3>PlayStation 4 Pro (10 Estaciones)</h3>
+                                <span class="tarifa-tag">12 Bs/h | Full HD</span>
+                            </div>
+                            <button class="accordion-btn abierto" data-detalle="PlayStation 4">[-]</button>
+                        </div>
+                        <div class="accordion-panel panel-visible">
+                            <div class="grilla-estaciones-compacta" data-generar-consola="ps4" data-prefijo="PS4" data-precio="12"></div>
+                        </div>
+                    </div>
+
+                    <div class="bloque-plataforma item-consola" data-consola="ps3" data-plataforma="playstation" data-nombre="PlayStation 3" data-precio="10">
+                        <div class="cabecera-acordeon">
+                            <div class="info-cabecera-consola">
+                                <h3>PlayStation 3 (10 Estaciones)</h3>
+                                <span class="tarifa-tag">10 Bs/h | Clasicos</span>
+                            </div>
+                            <button class="accordion-btn abierto" data-detalle="PlayStation 3">[-]</button>
+                        </div>
+                        <div class="accordion-panel panel-visible">
+                            <div class="grilla-estaciones-compacta" data-generar-consola="ps3" data-prefijo="PS3" data-precio="10"></div>
+                        </div>
+                    </div>
+
+                    <div class="bloque-plataforma item-consola" data-consola="xboxsx" data-plataforma="xbox" data-nombre="Xbox Series X" data-precio="15">
+                        <div class="cabecera-acordeon">
+                            <div class="info-cabecera-consola">
+                                <h3>Xbox Series X (10 Estaciones)</h3>
+                                <span class="tarifa-tag">15 Bs/h | Game Pass</span>
+                            </div>
+                            <button class="accordion-btn abierto" data-detalle="Xbox Series X">[-]</button>
+                        </div>
+                        <div class="accordion-panel panel-visible">
+                            <div class="grilla-estaciones-compacta" data-generar-consola="xboxsx" data-prefijo="XBSX" data-precio="15"></div>
+                        </div>
+                    </div>
+
+                    <div class="bloque-plataforma item-consola" data-consola="xboxone" data-plataforma="xboxone" data-nombre="Xbox One" data-precio="13">
+                        <div class="cabecera-acordeon">
+                            <div class="info-cabecera-consola">
+                                <h3>Xbox One (10 Estaciones)</h3>
+                                <span class="tarifa-tag">13 Bs/h</span>
+                            </div>
+                            <button class="accordion-btn abierto" data-detalle="Xbox One">[-]</button>
+                        </div>
+                        <div class="accordion-panel panel-visible">
+                            <div class="grilla-estaciones-compacta" data-generar-consola="xboxone" data-prefijo="XBONE" data-precio="13"></div>
+                        </div>
+                    </div>
+
+                    <div class="bloque-plataforma item-consola" data-consola="xbox360" data-plataforma="xbox360" data-nombre="Xbox 360" data-precio="10">
+                        <div class="cabecera-acordeon">
+                            <div class="info-cabecera-consola">
+                                <h3>Xbox 360 (10 Estaciones)</h3>
+                                <span class="tarifa-tag">10 Bs/h</span>
+                            </div>
+                            <button class="accordion-btn abierto" data-detalle="Xbox 360">[-]</button>
+                        </div>
+                        <div class="accordion-panel panel-visible">
+                            <div class="grilla-estaciones-compacta" data-generar-consola="xbox360" data-prefijo="XB360" data-precio="10"></div>
+                        </div>
+                    </div>
+
+                    <div class="bloque-plataforma item-consola" data-consola="switch" data-plataforma="switch" data-nombre="Nintendo Switch" data-precio="15">
+                        <div class="cabecera-acordeon">
+                            <div class="info-cabecera-consola">
+                                <h3>Nintendo Switch (10 Estaciones)</h3>
+                                <span class="tarifa-tag">15 Bs/h | Joy-Con</span>
+                            </div>
+                            <button class="accordion-btn abierto" data-detalle="Nintendo Switch">[-]</button>
+                        </div>
+                        <div class="accordion-panel panel-visible">
+                            <div class="grilla-estaciones-compacta" data-generar-consola="switch" data-prefijo="NSW" data-precio="15"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="vista-pcs" class="vista-hud">
+                <div class="barra-vista-interna">
+                    <button class="btn-volver" data-accion="Volver al Lobby">&lt; Lobby</button>
+                    <h2 class="titulo-vista">ZONA PC GAMER</h2>
+                    <div class="filtros-pcs">
+                        <button class="btn-filtro-pc activo" data-gama="todas">Todas</button>
+                        <button class="btn-filtro-pc" data-gama="ultra">Ultra (25 Bs/h)</button>
+                        <button class="btn-filtro-pc" data-gama="alta">Alta (20 Bs/h)</button>
+                        <button class="btn-filtro-pc" data-gama="media">Media (15 Bs/h)</button>
+                    </div>
+                </div>
+
+                <div class="contenedor-scroll-vista">
+                    <div class="bloque-plataforma" data-plataforma="pc">
+                        <div class="cabecera-acordeon">
+                            <div>
+                                <h3>Escuadron 20 PCs Gamer RTX</h3>
+                                <span class="tarifa-tag">Perifericos mecanicos incluidos</span>
+                            </div>
+                            <button class="accordion-btn abierto" data-detalle="Zona PC Gamer">[-]</button>
+                        </div>
+                        <div class="accordion-panel panel-visible">
+                            <div class="grilla-estaciones-compacta" id="grilla-20-pcs"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="vista-arcades" class="vista-hud">
+                <div class="barra-vista-interna">
+                    <button class="btn-volver" data-accion="Volver al Lobby">&lt; Lobby</button>
+                    <h2 class="titulo-vista">ARCADE RETRO</h2>
+                </div>
+
+                <div class="contenedor-scroll-vista">
+                    <div class="bloque-plataforma" data-plataforma="arcade">
+                        <div class="cabecera-acordeon">
+                            <div>
+                                <h3>25 Maquinas Arcade</h3>
+                                <span class="tarifa-tag">10 Bs/h o 2 Bs/ficha</span>
+                            </div>
+                            <button class="accordion-btn abierto" data-detalle="25 Maquinas Arcade">[-]</button>
+                        </div>
+                        <div class="accordion-panel panel-visible">
+                            <div class="grilla-estaciones-compacta" id="grilla-25-arcades"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="vista-snacks" class="vista-hud">
+                <div class="barra-vista-interna">
+                    <button class="btn-volver" data-accion="Volver al Lobby">&lt; Lobby</button>
+                    <h2 class="titulo-vista">SNACKS &amp; COMBOS</h2>
+                    <div class="filtros-snacks">
+                        <button class="btn-filtro-snack activo" data-categoria="todos">Todos</button>
+                        <button class="btn-filtro-snack" data-categoria="comida">Comida</button>
+                        <button class="btn-filtro-snack" data-categoria="bebida">Bebidas</button>
+                        <button class="btn-filtro-snack" data-categoria="combo">Combos</button>
+                    </div>
+                </div>
+
+                <div class="contenedor-scroll-vista">
+                    <div class="grilla-snacks"></div>
+                </div>
+            </section>
+
+            <section id="vista-bitacora" class="vista-hud">
+                <div class="barra-vista-interna">
+                    <button class="btn-volver" data-accion="Volver al Lobby">&lt; Lobby</button>
+                    <h2 class="titulo-vista">BITACORA DOM</h2>
+                    <button id="btn-limpiar-log" data-accion="Limpiar Bitacora">Limpiar</button>
+                </div>
+
+                <div class="contenedor-scroll-vista">
+                    <div class="panel-bitacora-full">
+                        <div id="log-output" class="consola-eventos"></div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <div id="modal-confirmacion">
+            <div class="modal-contenido">
+                <div class="modal-header">
+                    <h2>CHECKOUT</h2>
+                    <div class="caja-timer">
+                        <span>EXPIRA:</span>
+                        <strong id="timer-modal">00:30</strong>
+                    </div>
+                </div>
+
+                <div class="modal-body">
+                    <ul id="modal-resumen-lista"></ul>
+                    <div class="modal-total-box">
+                        <span>Total:</span>
+                        <strong><span id="modal-total">0</span> Bs</strong>
+                    </div>
+
+                    <form id="form-checkout">
+                        <label for="input-nombre-cliente">Nombre del Jugador / Cliente:</label>
+                        <input type="text" id="input-nombre-cliente" placeholder="Ej. Alex Mercer" required>
+
+                        <label for="select-modalidad">Modalidad:</label>
+                        <select id="select-modalidad">
+                            <option value="Reserva para llegar al local">Reserva para llegar al local</option>
+                            <option value="Pedido directo a mi estacion actual">Pedido a mi estacion actual</option>
+                        </select>
+
+                        <label for="forma-pago">Forma de Pago:</label>
+                        <select id="forma-pago">
+                            <option value="Efectivo (Pago en Local)">Efectivo (Pago en Local)</option>
+                            <option value="Pago QR (Simple / Transferencia Movil)">Pago QR</option>
+                            <option value="Transferencia Bancaria">Transferencia Bancaria</option>
+                        </select>
+
+                        <div id="modal-error" class="msg-error"></div>
+
+                        <div class="modal-acciones">
+                            <button type="submit" id="btn-confirmar-pago">Confirmar Pedido</button>
+                            <button type="button" id="btn-cerrar-modal" data-accion="Cancelar Modal">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
+

@@ -1,0 +1,93 @@
+[
+  {
+    "id": "snack-1",
+    "categoria": "comida",
+    "nombre": "Hamburguesa Doble LevelUp",
+    "precio": 25,
+    "etiqueta": "COCINA CALIENTE",
+    "descripcion": "Doble carne a la parrilla, queso cheddar fundido, tocino y papas.",
+    "imagen": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='100' viewBox='0 0 160 100'%3E%3Crect width='160' height='100' fill='%230f1424'/%3E%3Cpath d='M30,55 Q80,20 130,55' fill='%23d97706'/%3E%3Crect x='25' y='58' width='110' height='8' rx='4' fill='%2322c55e'/%3E%3Crect x='22' y='68' width='116' height='10' rx='5' fill='%2378350f'/%3E%3Crect x='28' y='80' width='104' height='12' rx='6' fill='%23d97706'/%3E%3C/svg%3E",
+    "esCombo": false
+  },
+  {
+    "id": "snack-2",
+    "categoria": "comida",
+    "nombre": "Pizza Personal Pepperoni",
+    "precio": 30,
+    "etiqueta": "COCINA CALIENTE",
+    "descripcion": "Masa artesanal crujiente, mozzarella doble y pepperoni americano.",
+    "imagen": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='100' viewBox='0 0 160 100'%3E%3Crect width='160' height='100' fill='%230f1424'/%3E%3Cpolygon points='80,15 140,85 20,85' fill='%23f59e0b'/%3E%3Ccircle cx='80' cy='50' r='8' fill='%23dc2626'/%3E%3Ccircle cx='60' cy='70' r='7' fill='%23dc2626'/%3E%3Ccircle cx='100' cy='72' r='7' fill='%23dc2626'/%3E%3C/svg%3E",
+    "esCombo": false
+  },
+  {
+    "id": "snack-3",
+    "categoria": "comida",
+    "nombre": "Alitas BBQ",
+    "precio": 28,
+    "etiqueta": "ESPECIAL GAMER",
+    "descripcion": "Porcion de 6 alitas banadas en salsa barbacoa ahumada con papas.",
+    "imagen": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='100' viewBox='0 0 160 100'%3E%3Crect width='160' height='100' fill='%230f1424'/%3E%3Cellipse cx='65' cy='50' rx='35' ry='20' transform='rotate(-20 65 50)' fill='%23b91c1c'/%3E%3Cellipse cx='95' cy='50' rx='35' ry='20' transform='rotate(20 95 50)' fill='%23991b1b'/%3E%3C/svg%3E",
+    "esCombo": false
+  },
+  {
+    "id": "snack-4",
+    "categoria": "comida",
+    "nombre": "Salchipapa Gamer",
+    "precio": 20,
+    "etiqueta": "CLASICO",
+    "descripcion": "Papas fritas crocantes con salchicha vienesa y trio de salsas.",
+    "imagen": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='100' viewBox='0 0 160 100'%3E%3Crect width='160' height='100' fill='%230f1424'/%3E%3Crect x='45' y='30' width='10' height='50' transform='rotate(-15 50 55)' fill='%23fbbf24'/%3E%3Crect x='70' y='25' width='10' height='55' fill='%23fbbf24'/%3E%3Crect x='95' y='30' width='10' height='50' transform='rotate(15 100 55)' fill='%23fbbf24'/%3E%3Cellipse cx='80' cy='65' rx='35' ry='12' fill='%23e11d48'/%3E%3C/svg%3E",
+    "esCombo": false
+  },
+  {
+    "id": "snack-5",
+    "categoria": "comida",
+    "nombre": "Nachos con Queso",
+    "precio": 18,
+    "etiqueta": "SNACK RAPIDO",
+    "descripcion": "Totopos de maiz crujientes con abundante queso cheddar caliente.",
+    "imagen": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='100' viewBox='0 0 160 100'%3E%3Crect width='160' height='100' fill='%230f1424'/%3E%3Cpolygon points='50,30 90,75 30,80' fill='%23eab308'/%3E%3Cpolygon points='110,35 135,80 75,70' fill='%23facc15'/%3E%3Cpolygon points='80,25 115,65 55,60' fill='%23ca8a04'/%3E%3Cpath d='M40,65 Q80,50 120,65' stroke='%23f59e0b' stroke-width='6' fill='none'/%3E%3C/svg%3E",
+    "esCombo": false
+  },
+  {
+    "id": "snack-6",
+    "categoria": "bebida",
+    "nombre": "Bebida Energetica Monster",
+    "precio": 15,
+    "etiqueta": "ENERGIA +100",
+    "descripcion": "Lata helada de 473ml para mantener tus reflejos al maximo.",
+    "imagen": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='100' viewBox='0 0 160 100'%3E%3Crect width='160' height='100' fill='%230f1424'/%3E%3Crect x='62' y='18' width='36' height='68' rx='6' fill='%23111827' stroke='%2322c55e' stroke-width='2'/%3E%3Cpath d='M72,35 L76,65 M80,30 L80,70 M88,35 L84,65' stroke='%2322c55e' stroke-width='3' fill='none'/%3E%3C/svg%3E",
+    "esCombo": false
+  },
+  {
+    "id": "snack-7",
+    "categoria": "bebida",
+    "nombre": "Gaseosa 500ml",
+    "precio": 10,
+    "etiqueta": "BEBIDA FRIA",
+    "descripcion": "Botella personal bien fria a eleccion de sabor.",
+    "imagen": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='100' viewBox='0 0 160 100'%3E%3Crect width='160' height='100' fill='%230f1424'/%3E%3Crect x='68' y='15' width='24' height='12' rx='2' fill='%23dc2626'/%3E%3Cpath d='M68,27 C68,40 60,45 60,65 C60,82 68,88 80,88 C92,88 100,82 100,65 C100,45 92,40 92,27 Z' fill='%231e3a8a' stroke='%2338bdf8' stroke-width='1.5'/%3E%3C/svg%3E",
+    "esCombo": false
+  },
+  {
+    "id": "snack-8",
+    "categoria": "combo",
+    "nombre": "Combo Gamer 1 (Hamburguesa + Gaseosa)",
+    "precio": 32,
+    "etiqueta": "COMBO OFERTA",
+    "descripcion": "Hamburguesa Doble LevelUp + Gaseosa 500ml directo a tu estacion.",
+    "imagen": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='100' viewBox='0 0 160 100'%3E%3Crect width='160' height='100' fill='%230f1424'/%3E%3Crect x='30' y='50' width='50' height='30' rx='5' fill='%23d97706'/%3E%3Crect x='90' y='30' width='25' height='50' rx='4' fill='%23ef4444'/%3E%3Ccircle cx='130' cy='30' r='12' fill='%23eab308'/%3E%3C/svg%3E",
+    "esCombo": true
+  },
+  {
+    "id": "snack-9",
+    "categoria": "combo",
+    "nombre": "Combo Gamer 2 (Pizza + Monster)",
+    "precio": 40,
+    "etiqueta": "COMBO PRO",
+    "descripcion": "Pizza Personal Pepperoni + Bebida Energetica Monster helada.",
+    "imagen": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='100' viewBox='0 0 160 100'%3E%3Crect width='160' height='100' fill='%230f1424'/%3E%3Cpolygon points='60,25 95,75 25,75' fill='%23f59e0b'/%3E%3Crect x='105' y='25' width='26' height='55' rx='4' fill='%23111827' stroke='%2322c55e' stroke-width='2'/%3E%3C/svg%3E",
+    "esCombo": true
+  }
+]
+

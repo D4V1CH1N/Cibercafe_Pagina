@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        if (window.innerWidth < 1024 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+            window.location.replace("pwa/index.html");
+        }
+    </script>
+    <title>LevelUp Arcade Bar - HUD System</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#070312">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('sw.js');
+            });
+        }
+    </script>
+</head>
+
+<body>
+
+    <div id="toast-alert">
+        <div class="toast-titulo" id="toast-titulo">NOTIFICACION DEL SISTEMA</div>
+        <div class="toast-cuerpo" id="toast-cuerpo">Operacion completada correctamente.</div>
+    </div>
+
+    <div id="app-hud">
+
+        <header id="hud-header">
+            <div class="hud-left">
+                <div class="avatar-box">LVL 99</div>
+                <div class="perfil-info">
+                    <span class="jugador-nombre" id="hud-jugador">Jugador: Invitado</span>
+                    <span class="jugador-estado">Estado: En Linea</span>
+                </div>
+                <div class="logo-hud">LEVELUP ARCADE BAR</div>
+            </div>
+
+            <div class="hud-center">
+                <span class="etiqueta-hud">ZONA ACTUAL</span>
+                <span id="indicador-tema">Lobby Principal</span>
+            </div>
+
+            <div class="hud-right">
+                <div class="moneda-box">
+                    <span class="moneda-label">Items en Carrito:</span>
+                    <span id="hud-items">0</span>
+                </div>
+                <div class="moneda-box moneda-oro">
+                    <span class="moneda-label">Total:</span>
+                    <span id="hud-total">0</span>
+                    <span>Bs</span>
+                </div>
+                <button id="btn-tema" class="btn-hud-top" data-accion="Alternar Modo Noche / Claro">Modo Claro</button>
+                <button id="btn-menu" class="btn-hud-top" data-accion="Menu Movil" aria-label="Menu Movil">
+                    <span class="linea-hamburguesa"></span>
+                    <span class="linea-hamburguesa"></span>
+                    <span class="linea-hamburguesa"></span>
+                </button>
+            </div>
+
+            <nav id="menu-movil">
+                <button class="btn-nav-movil" data-vista="vista-lobby" data-tema="" data-titulo="Lobby Principal">Lobby
+                    Principal</button>
+                <button class="btn-nav-movil" data-vista="vista-consolas" data-consola="todos" data-tema="playstation"
+                    data-titulo="Hangar de Consolas (Todas)">Consolas Next-Gen (35+)</button>
+                <button class="btn-nav-movil" data-vista="vista-pcs" data-tema="pc" data-titulo="Zona PC Gamer RTX">PCs
+                    RTX 4070 (40)</button>
+                <button class="btn-nav-movil" data-vista="vista-arcades" data-tema="arcade"
+                    data-titulo="Maquinas Arcade Retro">Arcades Retro (20)</button>
+                <button class="btn-nav-movil" data-vista="vista-snacks" data-tema="comida"
+                    data-titulo="Comida y Snacks">Combos &amp; Snacks (9)</button>
+                <button class="btn-nav-movil" data-vista="vista-bitacora" data-tema=""
+                    data-titulo="Bitacora de Eventos">Monitor de Eventos</button>
+            </nav>
+        </header>
+
+        <main id="hud-main">
+
+            <section id="vista-lobby" class="vista-hud vista-activa">
+                <div class="lobby-grid">
+
+                    <aside class="lobby-col-izq">
+                        <div class="panel-hud panel-oferta-lobby" id="tarjeta-oferta-relampago">
+                            <div class="badge-promo-activa" id="estado-promo-badge">OFERTA RELAMPAGO ACTIVA</div>
+                            <h3 class="titulo-promo-lobby">PS5 + 4 CONTROLES (2H) + PIZZA FAMILIAR GRATIS</h3>
+                            <p class="desc-promo-lobby">Contrata 1 PS5 con 4 controles (minimo 2h) antes de que acabe el
+                                tiempo y llevate 1 Pizza Familiar de 8 porciones GRATIS.</p>
+                            <div class="reloj-promo-contenedor">
+                                <span class="reloj-label">EXPIRA EN:</span>
+                                <div id="timer-oferta-10m">10:00</div>
+                            </div>
+                            <button id="btn-reclamar-promo"
+                                data-nombre="PROMO RELAMPAGO: PS5 (2h + 4 Controles) + Pizza Familiar 8 Porciones GRATIS"
+                                data-precio="45">
+                                Reclamar Promo (45 Bs + Pizza GRATIS)
+                            </button>
+                        </div>
+
+                        <div class="panel-hud">
+                            <h3 class="titulo-panel">ACCESOS Y COMUNIDAD</h3>
+                            <button class="btn-acceso-lateral" data-vista="vista-snacks" data-tema="comida"
+                                data-titulo="Tienda de Snacks">
+                                <span class="tag-lateral">[TIENDA]</span>
+                                <span>Tienda de Snacks y Combos</span>
+                            </button>
+                            <button class="btn-acceso-lateral" data-vista="vista-bitacora" data-tema=""
+                                data-titulo="Bitacora de Eventos">
+                                <span class="tag-lateral">[SISTEMA]</span>
+                                <span>Monitor de Eventos (Pantalla Completa)</span>
+                            </button>
+                            <button id="btn-like-lobby" data-accion="Like al Cibercafe">Dar Like al Cibercafe (<span
+                                    id="contador-likes">0</span>)</button>
+                        </div>
+                    </aside>
+
+                    <div class="lobby-col-centro">
+                        <div class="showcase-central">
+                            <div class="showcase-top">
+                                <h1 class="showcase-titulo">ARENA LEVELUP</h1>
+                                <p class="showcase-sub">Selecciona una tarjeta de acceso rapido o usa el radar en tiempo
+                                    real para filtrar plataformas, juegos y snacks.</p>
+                            </div>
+
+                            <div class="stats-rapidas">
+                                <button type="button" class="card-acceso-rapido btn-nav-hud" data-vista="vista-consolas"
+                                    data-consola="todos" data-tema="playstation"
+                                    data-titulo="Hangar de Consolas (Ver Todas)">
+                                    <span class="stat-num">Consolas Next-Gen (35+)</span>
+                                    <span class="stat-label">PS5, PS4, PS3, Xbox Series X/One/360 y Switch</span>
+                                </button>
+                                <button type="button" class="card-acceso-rapido btn-nav-hud" data-vista="vista-pcs"
+                                    data-tema="pc" data-titulo="Zona PC Gamer RTX">
+                                    <span class="stat-num">PCs RTX 4070 (40)</span>
+                                    <span class="stat-label">20 Equipos en Gamas Ultra, Alta y Media</span>
+                                </button>
+                                <button type="button" class="card-acceso-rapido btn-nav-hud" data-vista="vista-arcades"
+                                    data-tema="arcade" data-titulo="Maquinas Arcade Retro">
+                                    <span class="stat-num">Arcades Retro (20)</span>
+                                    <span class="stat-label">25 Gabinetes Clasicos por Horas o Fichas</span>
+                                </button>
+                                <button type="button" class="card-acceso-rapido btn-nav-hud" data-vista="vista-snacks"
+                                    data-tema="comida" data-titulo="Comida y Snacks a tu Puesto">
+                                    <span class="stat-num">Combos &amp; Snacks (9)</span>
+                                    <span class="stat-label">Hamburguesas, Pizzas, Alitas y Bebidas</span>
+                                </button>
+                            </div>
+
+                            <div class="buscador-box">
+                                <label for="buscador-rapido" class="label-buscador">RADAR DE BUSQUEDA</label>
+                                <input type="text" id="buscador-rapido"
+                                    placeholder="Buscar PS5, PS4, Xbox, Switch, PC RTX, KOF, Hamburguesa, Pizza...">
+                                <div id="sugerencias-busqueda">
+                                    <div class="item-sugerencia"
+                                        data-keywords="consolas todas ps5 ps4 ps3 playstation xbox switch fifa fc27 tekken 8 mortal kombat"
+                                        data-vista="vista-consolas" data-consola="todos" data-tema="playstation"
+                                        data-titulo="Hangar de Consolas (Ver Todas)">
+                                        <span>PlayStation 5 (10 Estaciones) - EA Sports FC 27 / Tekken 8 / MK1</span>
+                                        <span class="sug-precio">15 Bs/h</span>
+                                    </div>
+                                    <div class="item-sugerencia"
+                                        data-keywords="ps4 playstation 4 gta v bloodborne last of us"
+                                        data-vista="vista-consolas" data-consola="todos" data-tema="playstation"
+                                        data-titulo="Hangar de Consolas (Ver Todas)">
+                                        <span>PlayStation 4 (10 Estaciones) - GTA V / Bloodborne / FIFA</span>
+                                        <span class="sug-precio">12 Bs/h</span>
+                                    </div>
+                                    <div class="item-sugerencia"
+                                        data-keywords="ps3 playstation 3 pes 2013 twisted metal metal gear"
+                                        data-vista="vista-consolas" data-consola="todos" data-tema="playstation"
+                                        data-titulo="Hangar de Consolas (Ver Todas)">
+                                        <span>PlayStation 3 (10 Estaciones) - PES 2013 / Metal Gear Solid 4</span>
+                                        <span class="sug-precio">10 Bs/h</span>
+                                    </div>
+                                    <div class="item-sugerencia"
+                                        data-keywords="xbox series x halo infinite forza horizon 5 gears"
+                                        data-vista="vista-consolas" data-consola="todos" data-tema="xbox"
+                                        data-titulo="Hangar de Consolas (Ver Todas)">
+                                        <span>Xbox Series X (10 Estaciones) - Halo Infinite / Forza 5</span>
+                                        <span class="sug-precio">15 Bs/h</span>
+                                    </div>
+                                    <div class="item-sugerencia"
+                                        data-keywords="xbox one killer instinct sunset overdrive halo 5"
+                                        data-vista="vista-consolas" data-consola="todos" data-tema="xboxone"
+                                        data-titulo="Hangar de Consolas (Ver Todas)">
+                                        <span>Xbox One (10 Estaciones) - Halo 5 / Gears of War 4</span>
+                                        <span class="sug-precio">13 Bs/h</span>
+                                    </div>
+                                    <div class="item-sugerencia" data-keywords="xbox 360 left 4 dead 2 halo reach fable"
+                                        data-vista="vista-consolas" data-consola="todos" data-tema="xbox360"
+                                        data-titulo="Hangar de Consolas (Ver Todas)">
+                                        <span>Xbox 360 (10 Estaciones) - Left 4 Dead 2 / Halo Reach</span>
+                                        <span class="sug-precio">10 Bs/h</span>
+                                    </div>
+                                    <div class="item-sugerencia"
+                                        data-keywords="nintendo switch mario kart smash bros zelda pokemon"
+                                        data-vista="vista-consolas" data-consola="todos" data-tema="switch"
+                                        data-titulo="Hangar de Consolas (Ver Todas)">
+                                        <span>Nintendo Switch 1 &amp; 2 (10 Estaciones) - Mario Kart / Smash</span>
+                                        <span class="sug-precio">15 Bs/h</span>
+                                    </div>
+                                    <div class="item-sugerencia"
+                                        data-keywords="pc gamer rtx 4080 4070 4060 valorant dota lol counter"
+                                        data-vista="vista-pcs" data-tema="pc" data-titulo="Zona PC Gamer RTX">
+                                        <span>Zona PC Gamer (20 Estaciones: Ultra, Alta y Media)</span>
+                                        <span class="sug-precio">15 a 25 Bs/h</span>
+                                    </div>
+                                    <div class="item-sugerencia"
+                                        data-keywords="arcade kof metal slug street fighter pacman cadillacs snow bros"
+                                        data-vista="vista-arcades" data-tema="arcade"
+                                        data-titulo="Maquinas Arcade Retro">
+                                        <span>Salon Arcade Retro (25 Maquinas Clasicas Individuales)</span>
+                                        <span class="sug-precio">2 Bs/ficha</span>
+                                    </div>
+                                    <div class="item-sugerencia"
+                                        data-keywords="comida snack hamburguesa pizza alitas monster gaseosa salchipapa nachos"
+                                        data-vista="vista-snacks" data-tema="comida" data-titulo="Comida y Snacks">
+                                        <span>Menu de Comida, Combos y Bebidas Energeticas</span>
+                                        <span class="sug-precio">Desde 10 Bs</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <aside class="lobby-col-der">
+                        <div class="panel-hud panel-carrito-lobby">
+                            <div class="cabecera-panel-der">
+                                <h3 class="titulo-panel">INVENTARIO DE ORDEN</h3>
+                                <button id="btn-vaciar-carrito" data-accion="Vaciar Carrito">Limpiar</button>
+                            </div>
+                            <ul id="lista-carrito">
+                                <li class="carrito-vacio">Sin reservas ni snacks activos.</li>
+                            </ul>
+                            <div class="pie-carrito-fijo">
+                                <div class="caja-total-lobby">
+                                    <span>TOTAL ACUMULADO:</span>
+                                    <strong id="lobby-total-texto">0 Bs</strong>
+                                </div>
+                                <button id="btn-abrir-modal" data-accion="Abrir Modal de Confirmacion">CONFIRMAR RESERVA
+                                    / PEDIDO</button>
+                            </div>
+                        </div>
+
+                        <div class="panel-hud panel-mini-log">
+                            <h3 class="titulo-panel">RADAR DE EVENTOS (BITACORA)</h3>
+                            <div id="log-mini" class="contenedor-log-mini"></div>
+                        </div>
+                    </aside>
+
+                </div>
+
+                <footer class="hud-dock">
+                    <button class="btn-nav-hud" data-vista="vista-consolas" data-consola="todos" data-tema="playstation"
+                        data-titulo="Hangar de Consolas (Ver Todas)">
+                        <span class="dock-sub">70 ESTACIONES | 140 JUEGOS</span>
+                        <span class="dock-main">Estaciones PlayStation &amp; Xbox</span>
+                    </button>
+                    <button class="btn-nav-hud" data-vista="vista-pcs" data-tema="pc" data-titulo="Zona PC Gamer RTX">
+                        <span class="dock-sub">20 EQUIPOS | 3 GAMAS</span>
+                        <span class="dock-main">Zona PC Gamer RTX</span>
+                    </button>
+                    <button class="btn-nav-hud" data-vista="vista-arcades" data-tema="arcade"
+                        data-titulo="Maquinas Arcade Retro">
+                        <span class="dock-sub">25 GABINETES CLASICOS</span>
+                        <span class="dock-main">Maquinas Arcade Retro</span>
+                    </button>
+                    <button class="btn-nav-hud" data-vista="vista-snacks" data-tema="comida"
+                        data-titulo="Comida y Snacks a tu Puesto">
+                        <span class="dock-sub">SERVICIO A TU ESTACION</span>
+                        <span class="dock-main">Comida y Snacks a tu Puesto</span>
+                    </button>
+                    <button class="btn-nav-hud" data-vista="vista-bitacora" data-tema=""
+                        data-titulo="Bitacora de Eventos en Vivo">
+                        <span class="dock-sub">DELEGACION DOM</span>
+                        <span class="dock-main">Bitacora de Eventos en Vivo</span>
+                    </button>
+                    <div class="bloque-redes-sociales">
+                        <span class="dock-sub">REDES SOCIALES</span>
+                        <div class="redes-links">
+                            <a href="#" class="link-red-social">Facebook</a>
+                            <a href="#" class="link-red-social">Instagram</a>
+                            <a href="https://wa.me/59100000000" target="_blank" rel="noopener noreferrer" class="link-red-social">WhatsApp</a>
+                        </div>
+                    </div>
+                </footer>
+            </section>
+
+            <section id="vista-consolas" class="vista-hud">
+                <div class="barra-vista-interna">
+                    <button class="btn-volver" data-accion="Volver al Lobby">&lt; Volver al Lobby</button>
+                    <h2 class="titulo-vista">HANGAR DE CONSOLAS (10 ESTACIONES Y 20 JUEGOS POR PLATAFORMA)</h2>
+                    <div class="filtros-consolas">
+                        <button class="btn-filtro-consola activo" data-consola="todos" data-tema="playstation">Ver Todas
+                            (70)</button>
+                        <button class="btn-filtro-consola" data-consola="ps5" data-tema="playstation">PS5 (10)</button>
+                        <button class="btn-filtro-consola" data-consola="ps4" data-tema="playstation">PS4 (10)</button>
+                        <button class="btn-filtro-consola" data-consola="ps3" data-tema="playstation">PS3 (10)</button>
+                        <button class="btn-filtro-consola" data-consola="xboxsx" data-tema="xbox">Xbox Series X
+                            (10)</button>
+                        <button class="btn-filtro-consola" data-consola="xboxone" data-tema="xboxone">Xbox One
+                            (10)</button>
+                        <button class="btn-filtro-consola" data-consola="xbox360" data-tema="xbox360">Xbox 360
+                            (10)</button>
+                        <button class="btn-filtro-consola" data-consola="switch" data-tema="switch">Switch (10)</button>
+                    </div>
+                </div>
+
+                <div class="contenedor-scroll-vista" id="contenedor-plataformas-consolas">
+
+                    <div class="bloque-plataforma item-consola" data-consola="ps5" data-plataforma="playstation"
+                        data-nombre="PlayStation 5" data-precio="15">
+                        <div class="cabecera-acordeon">
+                            <div class="info-cabecera-consola">
+                                <h3>PlayStation 5 (10 Estaciones: PS5-01 a PS5-10)</h3>
+                                <span class="tarifa-tag">Tarifa: 15 Bs/h | TV 4K 120Hz | DualSense | 20 Juegos
+                                    Instalados</span>
+                            </div>
+                            <button class="accordion-btn abierto" data-detalle="PlayStation 5">Ocultar Estaciones
+                                [-]</button>
+                        </div>
+                        <div class="accordion-panel panel-visible">
+                            <div class="barra-catalogo-juegos">
+                                <span class="etiqueta-catalogo">20 JUEGOS PS5 DISPONIBLES:</span>
+                                <span class="lista-20-texto">1. EA Sports FC 27 | 2. Tekken 8 | 3. Mortal Kombat 1 | 4.
+                                    God of War Ragnarok | 5. Spider-Man 2 | 6. Elden Ring | 7. Resident Evil 4 Remake |
+                                    8. Demon's Souls | 9. Gran Turismo 7 | 10. Final Fantasy XVI | 11. Street Fighter 6
+                                    | 12. Silent Hill 2 | 13. Black Myth Wukong | 14. Astro Bot | 15. Horizon Forbidden
+                                    West | 16. Ghost of Tsushima | 17. Cyberpunk 2077 | 18. Ratchet &amp; Clank | 19.
+                                    Returnal | 20. The Last of Us Part I</span>
+                            </div>
+                            <div class="grilla-estaciones-compacta" data-generar-consola="ps5" data-prefijo="PS5"
+                                data-precio="15"></div>
+                        </div>
+                    </div>
+
+                    <div class="bloque-plataforma item-consola" data-consola="ps4" data-plataforma="playstation"
+                        data-nombre="PlayStation 4" data-precio="12">
+                        <div class="cabecera-acordeon">
+                            <div class="info-cabecera-consola">
+                                <h3>PlayStation 4 Pro (10 Estaciones: PS4-01 a PS4-10)</h3>
+                                <span class="tarifa-tag">Tarifa: 12 Bs/h | TV Full HD 43" | DualShock 4 | 20 Juegos
+                                    Instalados</span>
+                            </div>
+                            <button class="accordion-btn abierto" data-detalle="PlayStation 4">Ocultar Estaciones
+                                [-]</button>
+                        </div>
+                        <div class="accordion-panel panel-visible">
+                            <div class="barra-catalogo-juegos">
+                                <span class="etiqueta-catalogo">20 JUEGOS PS4 DISPONIBLES:</span>
+                                <span class="lista-20-texto">1. GTA V | 2. Bloodborne | 3. God of War (2018) | 4.
+                                    Uncharted 4 | 5. The Last of Us Part II | 6. Red Dead Redemption 2 | 7. FIFA 23 | 8.
+                                    Crash Team Racing Nitro-Fueled | 9. Marvel's Spider-Man | 10. Horizon Zero Dawn |
+                                    11. Persona 5 Royal | 12. Sekiro Shadows Die Twice | 13. Monster Hunter World | 14.
+                                    Dragon Ball FighterZ | 15. Mortal Kombat 11 | 16. Tekken 7 | 17. Shadow of the
+                                    Colossus | 18. Days Gone | 19. Infamous Second Son | 20. Nier Automata</span>
+                            </div>
+                            <div class="grilla-estaciones-compacta" data-generar-consola="ps4" data-prefijo="PS4"
+                                data-precio="12"></div>
+                        </div>
+                    </div>
+
+                    <div class="bloque-plataforma item-consola" data-consola="ps3" data-plataforma="playstation"
+                        data-nombre="PlayStation 3" data-precio="10">
+                        <div class="cabecera-acordeon">
+                            <div class="info-cabecera-consola">
+                                <h3>PlayStation 3 Slim (10 Estaciones: PS3-01 a PS3-10)</h3>
+                                <span class="tarifa-tag">Tarifa: 10 Bs/h | Pantalla LED 32" | DualShock 3 | 20 Juegos
+                                    Instalados</span>
+                            </div>
+                            <button class="accordion-btn abierto" data-detalle="PlayStation 3">Ocultar Estaciones
+                                [-]</button>
+                        </div>
+                        <div class="accordion-panel panel-visible">
+                            <div class="barra-catalogo-juegos">
+                                <span class="etiqueta-catalogo">20 JUEGOS PS3 DISPONIBLES:</span>
+                                <span class="lista-20-texto">1. PES 2013 | 2. Metal Gear Solid 4 | 3. God of War III |
+                                    4. Uncharted 2 | 5. Uncharted 3 | 6. Gran Turismo 6 | 7. Twisted Metal | 8. Killzone
+                                    3 | 9. Resistance 3 | 10. Infamous 2 | 11. LittleBigPlanet 2 | 12. Red Dead
+                                    Redemption | 13. GTA IV | 14. Demon's Souls | 15. Heavy Rain | 16. Beyond Two Souls
+                                    | 17. MotorStorm Pacific Rift | 18. Batman Arkham City | 19. Call of Duty Black Ops
+                                    II | 20. Ultra Street Fighter IV</span>
+                            </div>
+                            <div class="grilla-estaciones-compacta" data-generar-consola="ps3" data-prefijo="PS3"
+                                data-precio="10"></div>
+                        </div>
+                    </div>
+
+                    <div class="bloque-plataforma item-consola" data-consola="xboxsx" data-plataforma="xbox"
+                        data-nombre="Xbox Series X" data-precio="15">
+                        <div class="cabecera-acordeon">
+                            <div class="info-cabecera-consola">
+                                <h3>Xbox Series X (10 Estaciones: XBSX-01 a XBSX-10)</h3>
+                                <span class="tarifa-tag">Tarifa: 15 Bs/h | TV 4K 120Hz | Game Pass Ultimate | 20 Juegos
+                                    Instalados</span>
+                            </div>
+                            <button class="accordion-btn abierto" data-detalle="Xbox Series X">Ocultar Estaciones
+                                [-]</button>
+                        </div>
+                        <div class="accordion-panel panel-visible">
+                            <div class="barra-catalogo-juegos">
+                                <span class="etiqueta-catalogo">20 JUEGOS XBOX SERIES X DISPONIBLES:</span>
+                                <span class="lista-20-texto">1. Halo Infinite | 2. Forza Horizon 5 | 3. Forza Motorsport
+                                    | 4. Gears 5 | 5. Starfield | 6. Senua's Saga Hellblade II | 7. Call of Duty Black
+                                    Ops 6 | 8. Sea of Thieves | 9. Microsoft Flight Simulator | 10. Hi-Fi Rush | 11. Ori
+                                    and the Will of the Wisps | 12. Doom Eternal | 13. Elden Ring | 14. EA Sports FC 27
+                                    | 15. Mortal Kombat 1 | 16. Lies of P | 17. Palworld | 18. Grounded | 19. State of
+                                    Decay 2 | 20. Psychonauts 2</span>
+                            </div>
+                            <div class="grilla-estaciones-compacta" data-generar-consola="xboxsx" data-prefijo="XBSX"
+                                data-precio="15"></div>
+                        </div>
+                    </div>
+
+                    <div class="bloque-plataforma item-consola" data-consola="xboxone" data-plataforma="xboxone"
+                        data-nombre="Xbox One" data-precio="13">
+                        <div class="cabecera-acordeon">
+                            <div class="info-cabecera-consola">
+                                <h3>Xbox One X (10 Estaciones: XBONE-01 a XBONE-10)</h3>
+                                <span class="tarifa-tag">Tarifa: 13 Bs/h | TV Full HD 43" | Mandos Wireless | 20 Juegos
+                                    Instalados</span>
+                            </div>
+                            <button class="accordion-btn abierto" data-detalle="Xbox One">Ocultar Estaciones
+                                [-]</button>
+                        </div>
+                        <div class="accordion-panel panel-visible">
+                            <div class="barra-catalogo-juegos">
+                                <span class="etiqueta-catalogo">20 JUEGOS XBOX ONE DISPONIBLES:</span>
+                                <span class="lista-20-texto">1. Halo 5 Guardians | 2. Halo The Master Chief Collection |
+                                    3. Gears of War 4 | 4. Forza Horizon 4 | 5. Killer Instinct | 6. Sunset Overdrive |
+                                    7. Quantum Break | 8. Cuphead | 9. Ori and the Blind Forest | 10. Ryse Son of Rome |
+                                    11. Dead Rising 3 | 12. Titanfall 2 | 13. Red Dead Redemption 2 | 14. GTA V | 15.
+                                    The Witcher 3 | 16. Fallout 4 | 17. Battlefield 1 | 18. Apex Legends | 19. Fortnite
+                                    | 20. Minecraft</span>
+                            </div>
+                            <div class="grilla-estaciones-compacta" data-generar-consola="xboxone" data-prefijo="XBONE"
+                                data-precio="13"></div>
+                        </div>
+                    </div>
+
+                    <div class="bloque-plataforma item-consola" data-consola="xbox360" data-plataforma="xbox360"
+                        data-nombre="Xbox 360" data-precio="10">
+                        <div class="cabecera-acordeon">
+                            <div class="info-cabecera-consola">
+                                <h3>Xbox 360 Slim (10 Estaciones: XB360-01 a XB360-10)</h3>
+                                <span class="tarifa-tag">Tarifa: 10 Bs/h | Pantalla LED 32" | Clasicos Cooperativos | 20
+                                    Juegos Instalados</span>
+                            </div>
+                            <button class="accordion-btn abierto" data-detalle="Xbox 360">Ocultar Estaciones
+                                [-]</button>
+                        </div>
+                        <div class="accordion-panel panel-visible">
+                            <div class="barra-catalogo-juegos">
+                                <span class="etiqueta-catalogo">20 JUEGOS XBOX 360 DISPONIBLES:</span>
+                                <span class="lista-20-texto">1. Halo 3 | 2. Halo Reach | 3. Gears of War | 4. Gears of
+                                    War 2 | 5. Gears of War 3 | 6. Left 4 Dead 2 | 7. Fable II | 8. Forza Motorsport 4 |
+                                    9. Alan Wake | 10. Lost Odyssey | 11. Crackdown | 12. Project Gotham Racing 4 | 13.
+                                    Dead or Alive 4 | 14. Ninja Gaiden II | 15. Castle Crashers | 16. Call of Duty
+                                    Modern Warfare 2 | 17. BioShock | 18. Mass Effect 2 | 19. Red Dead Redemption | 20.
+                                    Skyrim</span>
+                            </div>
+                            <div class="grilla-estaciones-compacta" data-generar-consola="xbox360" data-prefijo="XB360"
+                                data-precio="10"></div>
+                        </div>
+                    </div>
+
+                    <div class="bloque-plataforma item-consola" data-consola="switch" data-plataforma="switch"
+                        data-nombre="Nintendo Switch" data-precio="15">
+                        <div class="cabecera-acordeon">
+                            <div class="info-cabecera-consola">
+                                <h3>Nintendo Switch 1 &amp; Switch 2 (10 Estaciones: NSW-01 a NSW-10)</h3>
+                                <span class="tarifa-tag">Tarifa: 15 Bs/h | Dock TV 4K | Joy-Con &amp; Pro Controller |
+                                    20 Juegos Instalados</span>
+                            </div>
+                            <button class="accordion-btn abierto" data-detalle="Nintendo Switch">Ocultar Estaciones
+                                [-]</button>
+                        </div>
+                        <div class="accordion-panel panel-visible">
+                            <div class="barra-catalogo-juegos">
+                                <span class="etiqueta-catalogo">20 JUEGOS NINTENDO SWITCH DISPONIBLES:</span>
+                                <span class="lista-20-texto">1. Mario Kart 8 Deluxe | 2. Super Smash Bros Ultimate | 3.
+                                    The Legend of Zelda Tears of the Kingdom | 4. Zelda Breath of the Wild | 5. Super
+                                    Mario Odyssey | 6. Super Mario Bros Wonder | 7. Splatoon 3 | 8. Animal Crossing New
+                                    Horizons | 9. Metroid Dread | 10. Fire Emblem Engage | 11. Xenoblade Chronicles 3 |
+                                    12. Luigi's Mansion 3 | 13. Super Mario Party Jamboree | 14. Pokemon Scarlet | 15.
+                                    Kirby and the Forgotten Land | 16. Donkey Kong Country Tropical Freeze | 17.
+                                    Bayonetta 3 | 18. Astral Chain | 19. Mario Tennis Aces | 20. Mario Strikers Battle
+                                    League</span>
+                            </div>
+                            <div class="grilla-estaciones-compacta" data-generar-consola="switch" data-prefijo="NSW"
+                                data-precio="15"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <section id="vista-pcs" class="vista-hud">
+                <div class="barra-vista-interna">
+                    <button class="btn-volver" data-accion="Volver al Lobby">&lt; Volver al Lobby</button>
+                    <h2 class="titulo-vista">ZONA PC GAMER (20 ESTACIONES CON HARDWARE DIFERENCIADO)</h2>
+                    <div class="filtros-pcs">
+                        <button class="btn-filtro-pc activo" data-gama="todas">Todas (20 PCs)</button>
+                        <button class="btn-filtro-pc" data-gama="ultra">Gama Ultra 25 Bs/h (7)</button>
+                        <button class="btn-filtro-pc" data-gama="alta">Gama Alta 20 Bs/h (7)</button>
+                        <button class="btn-filtro-pc" data-gama="media">Gama Media 15 Bs/h (6)</button>
+                    </div>
+                </div>
+
+                <div class="contenedor-scroll-vista">
+                    <div class="bloque-plataforma" data-plataforma="pc">
+                        <div class="cabecera-acordeon">
+                            <div>
+                                <h3>Escuadron 20 PCs Gamer (Perifericos Mecanicos Incluidos - Sin Selector de Mandos)
+                                </h3>
+                                <span class="tarifa-tag">PC-01 a PC-07: RTX 4080S (25 Bs/h) | PC-08 a PC-14: RTX 4070
+                                    (20 Bs/h) | PC-15 a PC-20: RTX 4060Ti (15 Bs/h)</span>
+                            </div>
+                            <button class="accordion-btn abierto" data-detalle="Zona PC Gamer 20 Equipos">Ocultar
+                                Estaciones [-]</button>
+                        </div>
+                        <div class="accordion-panel panel-visible">
+                            <div class="grilla-estaciones-compacta" id="grilla-20-pcs"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="vista-arcades" class="vista-hud">
+                <div class="barra-vista-interna">
+                    <button class="btn-volver" data-accion="Volver al Lobby">&lt; Volver al Lobby</button>
+                    <h2 class="titulo-vista">SALON ARCADE RETRO (25 GABINETES ORIGINALES UNICOS)</h2>
+                    <span class="tarifa-tag">Palancas Sanwa Integradas | 10 Bs/Hora Libre o 2 Bs/Ficha</span>
+                </div>
+
+                <div class="contenedor-scroll-vista">
+                    <div class="bloque-plataforma" data-plataforma="arcade">
+                        <div class="cabecera-acordeon">
+                            <div>
+                                <h3>Catalogo Oficial de 25 Maquinas Arcade Clasicas</h3>
+                                <span class="tarifa-tag">Selecciona Horas de Juego Libre (10 Bs/h) o Fichas Individuales
+                                    (2 Bs/ficha)</span>
+                            </div>
+                            <button class="accordion-btn abierto" data-detalle="25 Maquinas Arcade">Ocultar Estaciones
+                                [-]</button>
+                        </div>
+                        <div class="accordion-panel panel-visible">
+                            <div class="grilla-estaciones-compacta" id="grilla-25-arcades"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="vista-snacks" class="vista-hud">
+                <div class="barra-vista-interna">
+                    <button class="btn-volver" data-accion="Volver al Lobby">&lt; Volver al Lobby</button>
+                    <h2 class="titulo-vista">ARSENAL DE COMIDA Y SNACKS A TU PUESTO</h2>
+                    <div class="filtros-snacks">
+                        <button class="btn-filtro-snack activo" data-categoria="todos">Todos</button>
+                        <button class="btn-filtro-snack" data-categoria="comida">Comida</button>
+                        <button class="btn-filtro-snack" data-categoria="bebida">Bebidas</button>
+                        <button class="btn-filtro-snack" data-categoria="combo">Combos</button>
+                    </div>
+                </div>
+
+                <div class="contenedor-scroll-vista">
+                    <div class="grilla-snacks"></div>
+                </div>
+            </section>
+
+            <section id="vista-bitacora" class="vista-hud">
+                <div class="barra-vista-interna">
+                    <button class="btn-volver" data-accion="Volver al Lobby">&lt; Volver al Lobby</button>
+                    <h2 class="titulo-vista">CONSOLA CENTRAL DE BITACORA Y EVENTOS DOM</h2>
+                    <button id="btn-limpiar-log" data-accion="Limpiar Bitacora">Limpiar Registros</button>
+                </div>
+
+                <div class="contenedor-scroll-vista">
+                    <div class="panel-bitacora-full">
+                        <p class="info-bitacora">Monitor de Event Bubbling en tiempo real. Cada interaccion con botones,
+                            filtros, inputs, selectores, promociones y formularios se registra con marca de tiempo.</p>
+                        <div id="log-output" class="consola-eventos"></div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <div id="modal-confirmacion">
+            <div class="modal-contenido">
+                <div class="modal-header">
+                    <h2>CHECKOUT DE RESERVA Y PEDIDO</h2>
+                    <div class="caja-timer">
+                        <span>TARIFA FLASH EXPIRA EN:</span>
+                        <strong id="timer-modal">00:30</strong>
+                    </div>
+                </div>
+
+                <div class="modal-body">
+                    <h4>Detalle de Orden Actual:</h4>
+                    <ul id="modal-resumen-lista"></ul>
+                    <div class="modal-total-box">
+                        <span>Monto Total a Cancelar:</span>
+                        <strong><span id="modal-total">0</span> Bs</strong>
+                    </div>
+
+                    <form id="form-checkout">
+                        <label for="input-nombre-cliente">Nombre del Jugador / Cliente:</label>
+                        <input type="text" id="input-nombre-cliente" placeholder="Ej. Alex Mercer">
+
+                        <label for="select-modalidad">Modalidad de Atencion:</label>
+                        <select id="select-modalidad">
+                            <option value="Reserva para llegar al local">Reserva para llegar al local</option>
+                            <option value="Pedido directo a mi estacion actual">Pedido directo a mi estacion actual
+                            </option>
+                        </select>
+
+                        <label for="forma-pago">Forma de Pago:</label>
+                        <select id="forma-pago">
+                            <option value="Efectivo (Pago en Local)">Efectivo (Pago en Local)</option>
+                            <option value="Pago QR (Simple / Transferencia Movil)">Pago QR (Simple / Transferencia
+                                Movil)</option>
+                            <option value="Transferencia Bancaria">Transferencia Bancaria</option>
+                        </select>
+
+                        <div id="modal-error" class="msg-error"></div>
+
+                        <div class="modal-acciones">
+                            <button type="submit" id="btn-confirmar-pago">Procesar Pago / Confirmar</button>
+                            <button type="button" id="btn-cerrar-modal" data-accion="Cancelar Modal">Cancelar
+                                [X]</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
