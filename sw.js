@@ -1,4 +1,4 @@
-const NOMBRE_CACHE_ESTATICO = 'levelup-arcade-v2';
+const NOMBRE_CACHE_ESTATICO = 'levelup-arcade-v3';
 const RECURSOS_PRECACHE = [
     './',
     'index.html',
