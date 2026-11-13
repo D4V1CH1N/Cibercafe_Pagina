@@ -226,17 +226,17 @@ $(document).ready(function () {
             .then(function (catalogoSnacks) {
                 var fragmentoHtml = '';
                 for (var indiceSnack = 0; indiceSnack < catalogoSnacks.length; indiceSnack++) {
-                    var itemSnack = catalogoSnacks[indiceSnack];
-                    var claseCombo = itemSnack.esCombo ? ' card-combo' : '';
-                    fragmentoHtml +=
-                        '<div class="card-snack' + claseCombo + '" data-categoria="' + itemSnack.categoria + '" data-prod="' + itemSnack.nombre + '" data-precio="' + itemSnack.precio + '">' +
-                        '<span class="tag-snack">' + itemSnack.etiqueta + '</span>' +
-                        '<img src="' + itemSnack.imagen + '" alt="' + itemSnack.nombre + '" loading="lazy" class="img-snack">' +
-                        '<h3>' + itemSnack.nombre + '</h3>' +
-                        '<p>' + itemSnack.descripcion + '</p>' +
-                        '<div class="precio-snack">' + itemSnack.precio + ' Bs</div>' +
-                        '<button class="btn-pedir-snack">Anadir al Pedido</button>' +
-                        '</div>';
+                    var item = catalogoSnacks[indiceSnack];
+                    var claseCombo = item.esCombo ? ' card-combo' : '';
+                    fragmentoHtml += `
+                        <div class="card-snack${claseCombo}" data-categoria="${item.categoria}" data-prod="${item.nombre}" data-precio="${item.precio}">
+                            <span class="tag-snack">${item.etiqueta}</span>
+                            <img src="${item.imagen}" srcset="${item.imagen} 150w, ${item.imagen} 600w, ${item.imagen} 1080w" sizes="(max-width: 768px) 150px, (max-width: 1200px) 600px, 1080px" alt="${item.nombre}" loading="lazy" class="img-snack-dinamica">
+                            <h3>${item.nombre}</h3>
+                            <p>${item.descripcion}</p>
+                            <div class="precio-snack">${item.precio} Bs</div>
+                            <button class="btn-pedir-snack">Anadir al Pedido</button>
+                        </div>`;
                 }
                 $('.grilla-snacks').html(fragmentoHtml);
             })
