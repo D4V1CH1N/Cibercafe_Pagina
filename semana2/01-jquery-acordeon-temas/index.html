@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LevelUp Arcade Bar - Semana 2 Paso 01: jQuery Acordeon y Temas</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <header class="barra-superior">
+        <div class="marca-ciber">LEVELUP ARCADE BAR</div>
+        <button type="button" id="btn-hamburguesa" class="btn-hamburguesa" aria-label="Abrir Menu">
+            <span class="linea-menu"></span>
+            <span class="linea-menu"></span>
+            <span class="linea-menu"></span>
+        </button>
+        <nav id="nav-menu" class="nav-principal">
+            <a href="#catalogo" class="enlace-nav" data-categoria="todos">Inicio</a>
+            <a href="#catalogo" class="enlace-nav" data-categoria="consola">Consolas</a>
+            <a href="#catalogo" class="enlace-nav" data-categoria="pc">PCs Gamer</a>
+            <a href="#catalogo" class="enlace-nav" data-categoria="arcade">Arcades</a>
+            <a href="#catalogo" class="enlace-nav" data-categoria="snack">Snacks</a>
+            <button type="button" id="btn-tema" class="btn-neon" data-accion="Alternar Modo Visual">Cambiar Modo</button>
+        </nav>
+    </header>
+
+    <main class="contenedor-ciber">
+        <section class="hero-ciber">
+            <div>
+                <h1>CENTRO GAMING Y ARCADE BAR</h1>
+                <p>jQuery 3.7.1: Acordeones slideToggle, fadeIn/fadeOut, temas dinamicos y animacion de totales.</p>
+            </div>
+            <div class="resumen-hud">
+                <span>Total: <strong id="total-orden">0 Bs</strong></span>
+                <span>Likes: <strong id="contador-likes">0</strong></span>
+                <button type="button" id="btn-like" data-accion="Like Directo">Dar Like</button>
+            </div>
+        </section>
+
+        <section class="barra-buscador">
+            <input type="text" id="buscador-vivo" placeholder="Buscar PS5, Xbox, RTX, KOF, Hamburguesa...">
+        </section>
+
+        <div class="barra-filtros">
+            <button type="button" class="btn-filtro activo" data-categoria="todos" data-tema="" data-accion="Filtrar Todos">Todos</button>
+            <button type="button" class="btn-filtro" data-categoria="consola" data-tema="playstation" data-accion="Tema PlayStation">Consolas PS5</button>
+            <button type="button" class="btn-filtro" data-categoria="pc" data-tema="pc" data-accion="Tema PC Gamer">PCs Gamer</button>
+            <button type="button" class="btn-filtro" data-categoria="arcade" data-tema="arcade" data-accion="Tema Arcade">Arcades</button>
+            <button type="button" class="btn-filtro" data-categoria="snack" data-tema="comida" data-accion="Tema Snacks">Snacks</button>
+        </div>
+
+        <section id="catalogo" class="lista-acordeones">
+            <div class="bloque-plataforma card" data-categoria="consola" data-titulo="PlayStation 5">
+                <button type="button" class="accordion-btn" data-tema="playstation">PlayStation 5 - 10 Estaciones (15 Bs/h) [Click Acordeon]</button>
+                <div class="accordion-panel">
+                    <p>4K 120Hz con EA Sports FC 27, Tekken 8 y Mortal Kombat 1.</p>
+                    <select class="select-variante" data-nombre="PlayStation 5">
+                        <option value="15" data-detalle="1-2 Controles">1-2 Controles - 15 Bs/h</option>
+                        <option value="18" data-detalle="3 Controles">3 Controles - 18 Bs/h</option>
+                        <option value="21" data-detalle="4 Controles">4 Controles - 21 Bs/h</option>
+                    </select>
+                    <div class="precio-card">15 Bs</div>
+                    <button type="button" class="btn-agregar-total" data-nombre="PlayStation 5">Agregar al Total</button>
+                </div>
+            </div>
+
+            <div class="bloque-plataforma card" data-categoria="pc" data-titulo="PC RTX 4080 Ultra">
+                <button type="button" class="accordion-btn" data-tema="pc">Zona PC Gamer RTX - 20 Equipos (Desde 15 Bs/h) [Click Acordeon]</button>
+                <div class="accordion-panel">
+                    <p>Equipos Ultra RTX 4080 240Hz, Alta RTX 4070 y Media RTX 4060.</p>
+                    <select class="select-variante" data-nombre="PC Gamer RTX">
+                        <option value="25" data-detalle="Ultra RTX 4080">Ultra RTX 4080 - 25 Bs/h</option>
+                        <option value="20" data-detalle="Alta RTX 4070">Alta RTX 4070 - 20 Bs/h</option>
+                        <option value="15" data-detalle="Media RTX 4060">Media RTX 4060 - 15 Bs/h</option>
+                    </select>
+                    <div class="precio-card">25 Bs</div>
+                    <button type="button" class="btn-agregar-total" data-nombre="PC Gamer RTX">Agregar al Total</button>
+                </div>
+            </div>
+
+            <div class="bloque-plataforma card" data-categoria="arcade" data-titulo="Salon Arcade Retro">
+                <button type="button" class="accordion-btn" data-tema="arcade">Salon Arcade Retro - 25 Cabinas Clasicas [Click Acordeon]</button>
+                <div class="accordion-panel">
+                    <p>The King of Fighters 98, Metal Slug X y Street Fighter II.</p>
+                    <select class="select-variante" data-nombre="Gabinete Arcade">
+                        <option value="10" data-detalle="Por Hora">Por Hora - 10 Bs</option>
+                        <option value="10" data-detalle="Pack 5 Fichas">Pack 5 Fichas - 10 Bs</option>
+                        <option value="2" data-detalle="1 Ficha">1 Ficha - 2 Bs</option>
+                    </select>
+                    <div class="precio-card">10 Bs</div>
+                    <button type="button" class="btn-agregar-total" data-nombre="Gabinete Arcade">Agregar al Total</button>
+                </div>
+            </div>
+
+            <div class="bloque-plataforma card" data-categoria="snack" data-titulo="Hamburguesa Doble LevelUp">
+                <button type="button" class="accordion-btn" data-tema="comida">Snacks y Bebidas Gamer - Entrega en Estacion [Click Acordeon]</button>
+                <div class="accordion-panel">
+                    <p>Hamburguesa Doble LevelUp, Pizza Pepperoni y Bebida Monster.</p>
+                    <select class="select-variante" data-nombre="Menu Snacks">
+                        <option value="25" data-detalle="Hamburguesa Doble LevelUp">Hamburguesa Doble - 25 Bs</option>
+                        <option value="30" data-detalle="Pizza Personal Pepperoni">Pizza Pepperoni - 30 Bs</option>
+                        <option value="18" data-detalle="Monster Energy">Monster Energy - 18 Bs</option>
+                    </select>
+                    <div class="precio-card">25 Bs</div>
+                    <button type="button" class="btn-agregar-total" data-nombre="Menu Snacks">Agregar al Total</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel-doble-grid">
+            <div class="bloque-formulario">
+                <div id="alerta-formulario" class="alerta-bloque-top"></div>
+                <h2>SOLICITAR RESERVA O CONSULTA</h2>
+                <form id="form-consulta" novalidate>
+                    <label for="campo-nombre">Nombre Completo:</label>
+                    <input type="text" id="campo-nombre" placeholder="Ej. Alex Mercer">
+
+                    <label for="campo-correo">Correo Electronico:</label>
+                    <input type="email" id="campo-correo" placeholder="jugador@correo.com">
+
+                    <label for="campo-mensaje">Detalle de Estacion o Consulta:</label>
+                    <input type="text" id="campo-mensaje" placeholder="Reserva PS5 2 horas">
+
+                    <button type="submit" id="btn-enviar-form" data-accion="Enviar Formulario">Validar y Enviar</button>
+                </form>
+            </div>
+
+            <div class="bloque-bitacora">
+                <div class="cabecera-bitacora">
+                    <h2>BITACORA DE EVENTOS</h2>
+                    <button type="button" id="btn-limpiar-log" data-accion="Limpiar Bitacora">Limpiar</button>
+                </div>
+                <div id="log-output" class="consola-eventos"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer-ciber">
+        <div class="footer-redes">
+            <span>Redes Sociales:</span>
+            <a href="#">Facebook</a>
+            <a href="#">Instagram</a>
+            <a href="https://wa.me/59100000000" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+        </div>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>

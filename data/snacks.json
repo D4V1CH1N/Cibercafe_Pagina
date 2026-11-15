@@ -1,0 +1,92 @@
+[
+  {
+    "id": "snack-1",
+    "categoria": "comida",
+    "nombre": "Hamburguesa Doble LevelUp",
+    "precio": 25,
+    "etiqueta": "COCINA CALIENTE",
+    "descripcion": "Doble carne a la parrilla, queso cheddar fundido, tocino y papas.",
+    "imagen": "https://www.dropbox.com/scl/fi/07e07nngbnlk04f6qsngl/hamburguesa.png?rlkey=0s5mm464hnp8tlr1ouwwuhl98&st=0kkjwhvo&raw=1",
+    "esCombo": false
+  },
+  {
+    "id": "snack-2",
+    "categoria": "comida",
+    "nombre": "Pizza Personal Pepperoni",
+    "precio": 30,
+    "etiqueta": "COCINA CALIENTE",
+    "descripcion": "Masa artesanal crujiente, mozzarella doble y pepperoni americano.",
+    "imagen": "https://www.dropbox.com/scl/fi/xb14vzjobt5dal26gcq16/Pizza.png?rlkey=pvifz7weskylvuxlfbuv3yi5a&st=lv36kq79&raw=1",
+    "esCombo": false
+  },
+  {
+    "id": "snack-3",
+    "categoria": "comida",
+    "nombre": "Alitas BBQ",
+    "precio": 28,
+    "etiqueta": "ESPECIAL GAMER",
+    "descripcion": "Porcion de 6 alitas banadas en salsa barbacoa ahumada con papas.",
+    "imagen": "https://www.dropbox.com/scl/fi/ue1hw56pwsmunadnrsjqo/Alitas-BBQ.png?rlkey=kc9s3ep8r9s3gk09q1zkg8pxx&st=9pbswyt2&raw=1",
+    "esCombo": false
+  },
+  {
+    "id": "snack-4",
+    "categoria": "comida",
+    "nombre": "Salchipapa Gamer",
+    "precio": 20,
+    "etiqueta": "CLASICO",
+    "descripcion": "Papas fritas crocantes con salchicha vienesa y trio de salsas.",
+    "imagen": "https://www.dropbox.com/scl/fi/i6h92klz8vxsfqbp89meq/Salchipapa.png?rlkey=whg2md895gilsbtnz6sh9lml2&st=xeuunjms&raw=1",
+    "esCombo": false
+  },
+  {
+    "id": "snack-5",
+    "categoria": "comida",
+    "nombre": "Nachos con Queso",
+    "precio": 18,
+    "etiqueta": "SNACK RAPIDO",
+    "descripcion": "Totopos de maiz crujientes con abundante queso cheddar caliente.",
+    "imagen": "https://www.dropbox.com/scl/fi/87lfvtkktsy88ytzciswg/NachosConQueso.png?rlkey=s3ncy1ltprmouv016zzfhihkw&st=9lnqrpue&raw=1",
+    "esCombo": false
+  },
+  {
+    "id": "snack-6",
+    "categoria": "bebida",
+    "nombre": "Bebida Energetica Monster",
+    "precio": 15,
+    "etiqueta": "ENERGIA +100",
+    "descripcion": "Lata helada de 473ml para mantener tus reflejos al maximo.",
+    "imagen": "https://www.dropbox.com/scl/fi/exepgvnxbphst1it1jmim/Monster.png?rlkey=kcktiffqr3nahj4f2qaztae6b&st=lk9z1eff&raw=1",
+    "esCombo": false
+  },
+  {
+    "id": "snack-7",
+    "categoria": "bebida",
+    "nombre": "Gaseosa 500ml",
+    "precio": 10,
+    "etiqueta": "BEBIDA FRIA",
+    "descripcion": "Botella personal bien fria a eleccion de sabor.",
+    "imagen": "https://www.dropbox.com/scl/fi/e1xox0vvko8w633tsbrew/Gaseosas.png?rlkey=9gtjnwuy0gkqwlosav47lpup9&st=cy5r5yf4&raw=1",
+    "esCombo": false
+  },
+  {
+    "id": "snack-8",
+    "categoria": "combo",
+    "nombre": "Combo Gamer 1 (Hamburguesa + Gaseosa)",
+    "precio": 32,
+    "etiqueta": "COMBO OFERTA",
+    "descripcion": "Hamburguesa Doble LevelUp + Gaseosa 500ml directo a tu estacion.",
+    "imagen": "https://www.dropbox.com/scl/fi/aqc8mnfqt9sqldiadvnfy/Combo1.png?rlkey=qeqn352l66wtkpl0kbyd3it0e&st=rt5q5gvr&raw=1",
+    "esCombo": true
+  },
+  {
+    "id": "snack-9",
+    "categoria": "combo",
+    "nombre": "Combo Gamer 2 (Pizza + Monster)",
+    "precio": 40,
+    "etiqueta": "COMBO PRO",
+    "descripcion": "Pizza Personal Pepperoni + Bebida Energetica Monster helada.",
+    "imagen": "https://www.dropbox.com/scl/fi/sgen5zta3wzuldnz4kku7/Combo2.png?rlkey=e6hdzpwxjusrm2ugarunbqwo9&st=v8x2y7bq&raw=1",
+    "esCombo": true
+  }
+]

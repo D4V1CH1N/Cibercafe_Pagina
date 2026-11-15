@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LevelUp Arcade Bar - Paso 05: Bitacora Dia 1</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <header class="barra-superior">
+        <div class="marca-ciber">LEVELUP ARCADE BAR</div>
+        <button type="button" id="btn-hamburguesa" class="btn-hamburguesa" aria-label="Abrir Menu">
+            <span class="linea-menu"></span>
+            <span class="linea-menu"></span>
+            <span class="linea-menu"></span>
+        </button>
+        <nav id="nav-menu" class="nav-principal">
+            <a href="#catalogo" class="enlace-nav" data-categoria="todos">Inicio</a>
+            <a href="#catalogo" class="enlace-nav" data-categoria="consola">Consolas</a>
+            <a href="#catalogo" class="enlace-nav" data-categoria="pc">PCs Gamer</a>
+            <a href="#catalogo" class="enlace-nav" data-categoria="arcade">Arcades</a>
+            <a href="#catalogo" class="enlace-nav" data-categoria="snack">Snacks</a>
+            <button type="button" id="btn-tema" class="btn-neon" data-accion="Alternar Modo Visual">Cambiar Modo</button>
+        </nav>
+    </header>
+
+    <main class="contenedor-ciber">
+        <section class="hero-ciber">
+            <div>
+                <h1>CENTRO GAMING Y ARCADE BAR</h1>
+                <p>Bitacora Dia 1: Event Bubbling con dataset, Super Likes (doble clic) y radar keyup.</p>
+            </div>
+            <div class="caja-likes">
+                <span>Likes: <strong id="contador-likes">0</strong></span>
+                <button type="button" id="btn-like" data-accion="Like Directo">Dar Like</button>
+            </div>
+        </section>
+
+        <section class="barra-buscador">
+            <input type="text" id="buscador-vivo" placeholder="Buscar PS5, Xbox, RTX, KOF, Hamburguesa...">
+        </section>
+
+        <div class="barra-filtros">
+            <button type="button" class="btn-filtro activo" data-categoria="todos" data-accion="Filtrar Todos">Todos</button>
+            <button type="button" class="btn-filtro" data-categoria="consola" data-accion="Filtrar Consolas">Consolas</button>
+            <button type="button" class="btn-filtro" data-categoria="pc" data-accion="Filtrar PCs">PCs Gamer</button>
+            <button type="button" class="btn-filtro" data-categoria="arcade" data-accion="Filtrar Arcades">Arcades</button>
+            <button type="button" class="btn-filtro" data-categoria="snack" data-accion="Filtrar Snacks">Snacks</button>
+        </div>
+
+        <section id="catalogo" class="grilla-catalogo">
+            <article class="card" data-categoria="consola" data-titulo="PlayStation 5">
+                <span class="tag-zona">CONSOLA</span>
+                <h3>PlayStation 5</h3>
+                <p>10 Estaciones 4K 120Hz con EA Sports FC 27 y Tekken 8.</p>
+                <div class="precio-card">15 Bs/h</div>
+                <button type="button" class="btn-accion-card" data-accion="Seleccionar PlayStation 5">Seleccionar</button>
+            </article>
+
+            <article class="card" data-categoria="consola" data-titulo="Xbox Series X">
+                <span class="tag-zona">CONSOLA</span>
+                <h3>Xbox Series X</h3>
+                <p>10 Estaciones con Game Pass y Forza Horizon 5.</p>
+                <div class="precio-card">15 Bs/h</div>
+                <button type="button" class="btn-accion-card" data-accion="Seleccionar Xbox Series X">Seleccionar</button>
+            </article>
+
+            <article class="card" data-categoria="pc" data-titulo="PC RTX 4080 Ultra">
+                <span class="tag-zona">PC GAMER</span>
+                <h3>PC RTX 4080 Ultra</h3>
+                <p>Monitores 240Hz y perifericos mecanicos para torneos.</p>
+                <div class="precio-card">25 Bs/h</div>
+                <button type="button" class="btn-accion-card" data-accion="Seleccionar PC RTX 4080">Seleccionar</button>
+            </article>
+
+            <article class="card" data-categoria="arcade" data-titulo="Gabinete Retro KOF 98">
+                <span class="tag-zona">ARCADE</span>
+                <h3>Gabinete Retro KOF 98</h3>
+                <p>Palancas arcade originales y pantalla CRT calibrada.</p>
+                <div class="precio-card">10 Bs/h</div>
+                <button type="button" class="btn-accion-card" data-accion="Seleccionar Gabinete KOF 98">Seleccionar</button>
+            </article>
+
+            <article class="card" data-categoria="snack" data-titulo="Hamburguesa Doble LevelUp">
+                <span class="tag-zona">SNACK</span>
+                <h3>Hamburguesa Doble LevelUp</h3>
+                <p>Doble carne, cheddar fundido y papas sazonadas.</p>
+                <div class="precio-card">25 Bs</div>
+                <button type="button" class="btn-accion-card" data-accion="Pedir Hamburguesa Doble">Agregar</button>
+            </article>
+
+            <article class="card" data-categoria="snack" data-titulo="Pizza Personal Pepperoni">
+                <span class="tag-zona">SNACK</span>
+                <h3>Pizza Personal Pepperoni</h3>
+                <p>Masa artesanal recien horneada en 8 minutos.</p>
+                <div class="precio-card">30 Bs</div>
+                <button type="button" class="btn-accion-card" data-accion="Pedir Pizza Pepperoni">Agregar</button>
+            </article>
+        </section>
+
+        <section class="panel-doble-grid">
+            <div class="bloque-formulario">
+                <div id="alerta-formulario" class="alerta-bloque-top"></div>
+                <h2>SOLICITAR RESERVA O CONSULTA</h2>
+                <form id="form-consulta" novalidate>
+                    <label for="campo-nombre">Nombre Completo:</label>
+                    <input type="text" id="campo-nombre" placeholder="Ej. Alex Mercer">
+
+                    <label for="campo-correo">Correo Electronico:</label>
+                    <input type="email" id="campo-correo" placeholder="jugador@correo.com">
+
+                    <label for="campo-mensaje">Detalle de Estacion o Consulta:</label>
+                    <input type="text" id="campo-mensaje" placeholder="Reserva PS5 2 horas">
+
+                    <button type="submit" id="btn-enviar-form" data-accion="Enviar Consulta">Validar y Enviar</button>
+                </form>
+            </div>
+
+            <div class="bloque-bitacora">
+                <div class="cabecera-bitacora">
+                    <h2>BITACORA DE EVENTOS</h2>
+                    <button type="button" id="btn-limpiar-log" data-accion="Limpiar Bitacora">Limpiar</button>
+                </div>
+                <div id="log-output" class="consola-eventos"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer-ciber">
+        <div class="footer-redes">
+            <span>Redes Sociales:</span>
+            <a href="#">Facebook</a>
+            <a href="#">Instagram</a>
+            <a href="https://wa.me/59100000000" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
