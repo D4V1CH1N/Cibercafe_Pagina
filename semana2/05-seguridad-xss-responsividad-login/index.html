@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -33,19 +33,19 @@
                 <button type="button" class="btn-preset-rol" data-rol="encargado">Rol Encargado</button>
                 <button type="button" class="btn-preset-rol" data-rol="admin">Rol Admin</button>
             </div>
-            <form id="form-login-rol">
+            <form id="form-login-rol" class="form-vertical-apilado">
                 <label for="login-usuario">Nombre / GamerTag:</label>
                 <input type="text" id="login-usuario" placeholder="Ej. AlexMercer" required>
 
                 <label for="login-rol">Nivel de Acceso (Rol):</label>
                 <select id="login-rol">
                     <option value="cliente">Cliente (Reservas, Catalogo y Consultas)</option>
-                    <option value="encargado">Encargado (Gestion de Catalogo, Reservas y Consultas)</option>
-                    <option value="admin">Administrador (Control Total, Metricas y Bitacora DOM)</option>
+                    <option value="encargado">Encargado (Gestion de Staff, Catalogo y Reservas)</option>
+                    <option value="admin">Administrador (Control Total, Metricas y Auditoria DOM)</option>
                 </select>
 
                 <div id="login-error" class="msg-error"></div>
-                <button type="submit" id="btn-ingresar-rol" style="width:100%; margin-top:10px;">Ingresar al Sistema</button>
+                <button type="submit" id="btn-ingresar-rol" class="btn-primario-bloque">Ingresar al Sistema</button>
             </form>
         </div>
     </div>
@@ -92,17 +92,23 @@
             </div>
 
             <nav id="menu-movil">
-                <button class="btn-nav-movil" data-vista="vista-lobby" data-tema="" data-titulo="Lobby Principal">Lobby Principal</button>
+                <button class="btn-nav-movil" data-vista="vista-lobby" data-tema="" data-titulo="Lobby Principal">Lobby / Cliente</button>
                 <button class="btn-nav-movil" data-vista="vista-consolas" data-consola="todos" data-tema="playstation" data-titulo="Hangar de Consolas (Todas)">Consolas Next-Gen (70)</button>
                 <button class="btn-nav-movil" data-vista="vista-pcs" data-tema="pc" data-titulo="Zona PC Gamer RTX">PCs RTX (20)</button>
                 <button class="btn-nav-movil" data-vista="vista-arcades" data-tema="arcade" data-titulo="Maquinas Arcade Retro">Arcades Retro (25)</button>
                 <button class="btn-nav-movil" data-vista="vista-snacks" data-tema="comida" data-titulo="Comida y Snacks">Combos &amp; Snacks (9)</button>
-                <button class="btn-nav-movil solo-encargado" data-vista="vista-encargado" data-tema="" data-titulo="Gestion de Encargado">Gestion de Encargado</button>
-                <button class="btn-nav-movil solo-admin" data-vista="vista-bitacora" data-tema="" data-titulo="Bitacora de Eventos">Monitor de Eventos (Admin)</button>
+                <button class="btn-nav-movil permiso-encargado" data-vista="vista-encargado" data-tema="" data-titulo="Gestion de Staff">Gestion de Staff (Encargado)</button>
+                <button class="btn-nav-movil permiso-admin" data-vista="vista-bitacora" data-tema="" data-titulo="Control Total (Admin)">Control Total (Administrador)</button>
             </nav>
         </header>
 
         <main id="hud-main">
+
+            <nav id="barra-tabs-rol" class="barra-tabs-rol" aria-label="Control Modular de Roles">
+                <button type="button" class="tab-rol activo" data-vista="vista-lobby" data-tema="" data-titulo="Lobby Principal">Lobby / Cliente</button>
+                <button type="button" class="tab-rol permiso-encargado" data-vista="vista-encargado" data-tema="" data-titulo="Gestion de Staff">Gestion de Staff</button>
+                <button type="button" class="tab-rol permiso-admin" data-vista="vista-bitacora" data-tema="" data-titulo="Control Total (Admin)">Control Total</button>
+            </nav>
 
             <section id="vista-lobby" class="vista-hud vista-activa">
                 <div class="lobby-grid">
@@ -129,13 +135,9 @@
                                 <span class="tag-lateral">[TIENDA]</span>
                                 <span>Tienda de Snacks y Combos</span>
                             </button>
-                            <button class="btn-acceso-lateral solo-encargado" data-vista="vista-encargado" data-tema="" data-titulo="Gestion de Encargado">
-                                <span class="tag-lateral">[STAFF]</span>
-                                <span>Gestion de Encargado</span>
-                            </button>
-                            <button class="btn-acceso-lateral solo-admin" data-vista="vista-bitacora" data-tema="" data-titulo="Bitacora de Eventos">
-                                <span class="tag-lateral">[ADMIN]</span>
-                                <span>Monitor de Eventos y Metricas</span>
+                            <button class="btn-acceso-lateral" data-vista="vista-consolas" data-consola="todos" data-tema="playstation" data-titulo="Hangar de Consolas">
+                                <span class="tag-lateral">[SALAS]</span>
+                                <span>Explorar Hangar de Consolas</span>
                             </button>
                             <button id="btn-like-lobby" data-accion="Like al Cibercafe">Dar Like al Cibercafe (<span id="contador-likes">0</span>)</button>
                         </div>
@@ -217,11 +219,14 @@
                             <div class="bloque-consulta-cliente">
                                 <div id="alerta-consulta-cliente" class="alerta-bloque-top"></div>
                                 <span class="label-buscador">ATENCION Y CONSULTAS AL ENCARGADO</span>
-                                <form id="form-consulta-cliente">
+                                <form id="form-consulta-cliente" class="form-vertical-apilado">
+                                    <label for="consulta-nombre">Nombre del Jugador:</label>
                                     <input type="text" id="consulta-nombre" placeholder="Tu nombre completo">
+                                    <label for="consulta-correo">Correo de Contacto:</label>
                                     <input type="email" id="consulta-correo" placeholder="tu@correo.com">
+                                    <label for="consulta-mensaje">Consulta o Requerimiento:</label>
                                     <input type="text" id="consulta-mensaje" placeholder="Escribe tu consulta sobre torneos, juegos o reservas...">
-                                    <button type="submit" id="btn-enviar-consulta" style="width:100%;">Enviar Consulta</button>
+                                    <button type="submit" id="btn-enviar-consulta" class="btn-primario-bloque">Enviar Consulta</button>
                                 </form>
                             </div>
                         </div>
@@ -244,11 +249,6 @@
                                 <button id="btn-abrir-modal" data-accion="Abrir Modal de Confirmacion">CONFIRMAR RESERVA / PEDIDO</button>
                             </div>
                         </div>
-
-                        <div class="panel-hud panel-mini-log solo-admin">
-                            <h3 class="titulo-panel">RADAR DE EVENTOS (ADMIN)</h3>
-                            <div id="log-mini" class="contenedor-log-mini"></div>
-                        </div>
                     </aside>
 
                 </div>
@@ -269,14 +269,6 @@
                     <button class="btn-nav-hud" data-vista="vista-snacks" data-tema="comida" data-titulo="Comida y Snacks a tu Puesto">
                         <span class="dock-sub">SERVICIO EN SALA</span>
                         <span class="dock-main">Snacks &amp; Combos</span>
-                    </button>
-                    <button class="btn-nav-hud solo-encargado" data-vista="vista-encargado" data-tema="" data-titulo="Gestion de Encargado">
-                        <span class="dock-sub">PANEL STAFF</span>
-                        <span class="dock-main">Gestion Encargado</span>
-                    </button>
-                    <button class="btn-nav-hud solo-admin" data-vista="vista-bitacora" data-tema="" data-titulo="Bitacora de Eventos">
-                        <span class="dock-sub">AUDITORIA DOM</span>
-                        <span class="dock-main">Bitacora &amp; Metricas</span>
                     </button>
                     <div class="bloque-redes-sociales">
                         <span class="dock-sub">REDES SOCIALES</span>
@@ -467,17 +459,17 @@
                 </div>
             </section>
 
-            <section id="vista-encargado" class="vista-hud solo-encargado">
+            <section id="vista-encargado" class="vista-hud">
                 <div class="barra-vista-interna">
                     <button class="btn-volver" data-accion="Volver al Lobby">&lt; Volver al Lobby</button>
-                    <h2 class="titulo-vista">PANEL DE GESTION DE ENCARGADO (STAFF)</h2>
+                    <h2 class="titulo-vista">GESTION DE STAFF (ENCARGADO)</h2>
                 </div>
 
                 <div class="contenedor-scroll-vista">
                     <div class="panel-encargado-grid">
-                        <div class="panel-hud">
+                        <div class="panel-hud bloque-staff-independiente">
                             <h3 class="titulo-panel">AGREGAR PRODUCTO AL CATALOGO</h3>
-                            <form id="form-nuevo-snack">
+                            <form id="form-nuevo-snack" class="form-vertical-apilado">
                                 <label for="nuevo-snack-nombre">Nombre del Producto:</label>
                                 <input type="text" id="nuevo-snack-nombre" placeholder="Ej. Hot Dog Supreme">
 
@@ -494,18 +486,18 @@
                                 <label for="nuevo-snack-desc">Descripcion:</label>
                                 <input type="text" id="nuevo-snack-desc" placeholder="Ingredientes o detalles">
 
-                                <button type="submit" style="width:100%; margin-top:8px;">Agregar Producto en Vivo</button>
+                                <button type="submit" class="btn-primario-bloque">Agregar Producto en Vivo</button>
                             </form>
                         </div>
 
-                        <div class="panel-hud">
-                            <h3 class="titulo-panel">RESERVAS PENDIENTES DE APROBACION</h3>
+                        <div class="panel-hud bloque-staff-independiente">
+                            <h3 class="titulo-panel">BANDEJA DE RESERVAS PENDIENTES</h3>
                             <ul id="lista-reservas-encargado" class="lista-gestion">
                                 <li class="item-gestion vacio-gestion">Sin reservas pendientes en cola de sala.</li>
                             </ul>
                         </div>
 
-                        <div class="panel-hud">
+                        <div class="panel-hud bloque-staff-independiente">
                             <h3 class="titulo-panel">CONSULTAS DE CLIENTES</h3>
                             <ul id="lista-consultas-encargado" class="lista-gestion">
                                 <li class="item-gestion vacio-gestion">Sin consultas nuevas registradas.</li>
@@ -515,36 +507,66 @@
                 </div>
             </section>
 
-            <section id="vista-bitacora" class="vista-hud solo-admin">
+            <section id="vista-bitacora" class="vista-hud">
                 <div class="barra-vista-interna">
                     <button class="btn-volver" data-accion="Volver al Lobby">&lt; Volver al Lobby</button>
-                    <h2 class="titulo-vista">AUDITORIA DOM Y METRICAS (ADMINISTRADOR)</h2>
-                    <button id="btn-limpiar-log" data-accion="Limpiar Bitacora">Purgar Registros</button>
+                    <h2 class="titulo-vista">CONTROL TOTAL Y AUDITORIA DOM (ADMINISTRADOR)</h2>
                 </div>
 
                 <div class="contenedor-scroll-vista">
-                    <div id="metricas-admin" class="metricas-grid-admin">
-                        <div class="tarjeta-metrica-admin">
-                            <span>EVENTOS DOM</span>
-                            <strong id="metrica-eventos">0</strong>
+                    <div class="admin-modulos-stack">
+                        <div class="tarjeta-colapsable-admin panel-hud">
+                            <button type="button" class="btn-toggle-admin-card abierto" data-panel="admin-panel-metricas">
+                                <span>METRICAS DE EVENTOS Y ACTIVIDAD</span>
+                                <span class="estado-toggle">Ocultar [-]</span>
+                            </button>
+                            <div id="admin-panel-metricas" class="admin-card-body">
+                                <div id="metricas-admin" class="metricas-grid-admin">
+                                    <div class="tarjeta-metrica-admin">
+                                        <span>EVENTOS DOM</span>
+                                        <strong id="metrica-eventos">0</strong>
+                                    </div>
+                                    <div class="tarjeta-metrica-admin">
+                                        <span>RESERVAS ATENDIDAS</span>
+                                        <strong id="metrica-reservas">0</strong>
+                                    </div>
+                                    <div class="tarjeta-metrica-admin">
+                                        <span>REACCIONES LIKES</span>
+                                        <strong id="metrica-likes">0</strong>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="tarjeta-metrica-admin">
-                            <span>RESERVAS ATENDIDAS</span>
-                            <strong id="metrica-reservas">0</strong>
-                        </div>
-                        <div class="tarjeta-metrica-admin">
-                            <span>COLA OFFLINE FIFO</span>
-                            <strong id="metrica-cola">0</strong>
-                        </div>
-                        <div class="tarjeta-metrica-admin">
-                            <span>REACCIONES LIKES</span>
-                            <strong id="metrica-likes">0</strong>
-                        </div>
-                    </div>
 
-                    <div class="panel-bitacora-full">
-                        <p class="info-bitacora">Monitor exclusivo de Administrador. Cada evento DOM capturado se sanitiza contra XSS antes de renderizarse.</p>
-                        <div id="log-output" class="consola-eventos"></div>
+                        <div class="tarjeta-colapsable-admin panel-hud">
+                            <button type="button" class="btn-toggle-admin-card abierto" data-panel="admin-panel-fifo">
+                                <span>ESTADO DE LA COLA OFFLINE-FIRST FIFO</span>
+                                <span class="estado-toggle">Ocultar [-]</span>
+                            </button>
+                            <div id="admin-panel-fifo" class="admin-card-body">
+                                <div class="barra-estado-fifo">
+                                    <span>Estado de Red: <strong id="admin-estado-red">ONLINE</strong></span>
+                                    <span>Registros en Cola: <strong id="metrica-cola">0</strong></span>
+                                </div>
+                                <ul id="lista-cola-fifo-admin" class="lista-gestion">
+                                    <li class="item-gestion vacio-gestion">Sin pedidos pendientes en cola FIFO.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="tarjeta-colapsable-admin panel-hud">
+                            <button type="button" class="btn-toggle-admin-card abierto" data-panel="admin-panel-auditoria">
+                                <span>AUDITORIA DOM Y REGISTRO DE EVENTOS</span>
+                                <span class="estado-toggle">Ocultar [-]</span>
+                            </button>
+                            <div id="admin-panel-auditoria" class="admin-card-body">
+                                <div class="cabecera-panel-der">
+                                    <p class="info-bitacora">Registro sanitizado con jQuery .text() contra inyeccion XSS.</p>
+                                    <button type="button" id="btn-limpiar-log" data-accion="Limpiar Bitacora">Purgar Registros</button>
+                                </div>
+                                <div id="log-output" class="consola-eventos"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -569,7 +591,7 @@
                         <strong><span id="modal-total">0</span> Bs</strong>
                     </div>
 
-                    <form id="form-checkout">
+                    <form id="form-checkout" class="form-vertical-apilado">
                         <label for="input-nombre-cliente">Nombre del Jugador / Cliente:</label>
                         <input type="text" id="input-nombre-cliente" placeholder="Ej. Alex Mercer">
 

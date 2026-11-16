@@ -1,4 +1,4 @@
-const NOMBRE_CACHE = 'levelup-semana2-paso05-v1';
+const NOMBRE_CACHE = 'levelup-semana2-paso05-v2';
 const ARCHIVOS_ESTATICOS = [
     'index.html',
     'styles.css',

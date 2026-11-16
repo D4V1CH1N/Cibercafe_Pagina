@@ -41,7 +41,7 @@
                 <button type="button" class="btn-preset-rol" data-rol="encargado">Encargado</button>
                 <button type="button" class="btn-preset-rol" data-rol="admin">Admin</button>
             </div>
-            <form id="form-login-rol">
+            <form id="form-login-rol" class="form-vertical-apilado">
                 <label for="login-usuario">Nombre / GamerTag:</label>
                 <input type="text" id="login-usuario" placeholder="Ej. AlexMercer" required>
 
@@ -53,7 +53,7 @@
                 </select>
 
                 <div id="login-error" class="msg-error"></div>
-                <button type="submit" id="btn-ingresar-rol" style="width:100%; margin-top:10px;">Ingresar al HUD</button>
+                <button type="submit" id="btn-ingresar-rol" class="btn-primario-bloque">Ingresar al HUD</button>
             </form>
         </div>
     </div>
@@ -178,13 +178,13 @@
         </div>
 
         <aside class="fab-lateral-group">
-            <button class="fab-item btn-nav-hud tab-tactil solo-encargado" data-vista="vista-encargado" data-tema="" data-titulo="Staff" title="Gestion de Encargado">
+            <button class="fab-item btn-nav-hud tab-tactil permiso-encargado" data-vista="vista-encargado" data-tema="" data-titulo="Staff" title="Gestion de Encargado">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 2l3 7h7l-5.5 4.5 2 7L12 16l-6.5 4.5 2-7L2 9h7z"></path>
                 </svg>
             </button>
 
-            <button class="fab-item btn-nav-hud tab-tactil solo-admin" data-vista="vista-bitacora" data-tema="" data-titulo="Bitacora" title="Bitacora del Sistema">
+            <button class="fab-item btn-nav-hud tab-tactil permiso-admin" data-vista="vista-bitacora" data-tema="" data-titulo="Control Total" title="Control Total y Bitacora">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="4 17 10 11 4 5"></polyline>
                     <line x1="12" y1="19" x2="20" y2="19"></line>
@@ -221,6 +221,12 @@
         </aside>
 
         <main id="hud-main">
+
+            <nav id="barra-tabs-rol" class="barra-tabs-rol" aria-label="Control Modular de Roles">
+                <button type="button" class="tab-rol activo" data-vista="vista-lobby" data-tema="" data-titulo="Lobby">Lobby / Cliente</button>
+                <button type="button" class="tab-rol permiso-encargado" data-vista="vista-encargado" data-tema="" data-titulo="Staff">Gestion de Staff</button>
+                <button type="button" class="tab-rol permiso-admin" data-vista="vista-bitacora" data-tema="" data-titulo="Control Total">Control Total</button>
+            </nav>
 
             <section id="vista-lobby" class="vista-hud vista-activa">
                 <div class="lobby-grid">
@@ -286,18 +292,19 @@
                         <div class="bloque-consulta-cliente">
                             <div id="alerta-consulta-cliente" class="alerta-bloque-top"></div>
                             <span class="label-buscador">CONSULTAS AL ENCARGADO</span>
-                            <form id="form-consulta-cliente">
-                                <input type="text" id="consulta-nombre" placeholder="Tu nombre">
+                            <form id="form-consulta-cliente" class="form-vertical-apilado">
+                                <label for="consulta-nombre">Tu Nombre:</label>
+                                <input type="text" id="consulta-nombre" placeholder="Ej. Alex Mercer">
+                                <label for="consulta-correo">Tu Correo Electronico:</label>
                                 <input type="email" id="consulta-correo" placeholder="tu@correo.com">
+                                <label for="consulta-mensaje">Tu Consulta:</label>
                                 <input type="text" id="consulta-mensaje" placeholder="Escribe tu consulta...">
-                                <button type="submit" id="btn-enviar-consulta" style="width:100%;">Enviar Consulta</button>
+                                <button type="submit" id="btn-enviar-consulta" class="btn-primario-bloque">Enviar Consulta</button>
                             </form>
                         </div>
 
                         <button id="btn-like-lobby" data-accion="Like al Cibercafe">Dar Like (<span id="contador-likes">0</span>)</button>
                     </div>
-
-                    <div id="log-mini" class="log-mini-oculto"></div>
 
                 </div>
             </section>
@@ -487,38 +494,46 @@
                 </div>
             </section>
 
-            <section id="vista-encargado" class="vista-hud solo-encargado">
+            <section id="vista-encargado" class="vista-hud">
                 <div class="barra-vista-interna">
                     <div class="vista-interna-header">
                         <button class="btn-volver" data-accion="Volver al Lobby">&lt; Lobby</button>
-                        <h2 class="titulo-vista">GESTION ENCARGADO</h2>
+                        <h2 class="titulo-vista">GESTION DE STAFF</h2>
                     </div>
                 </div>
 
                 <div class="contenedor-scroll-vista">
-                    <div class="panel-hud">
-                        <h3 class="titulo-panel">AGREGAR SNACK EN VIVO</h3>
-                        <form id="form-nuevo-snack">
-                            <input type="text" id="nuevo-snack-nombre" placeholder="Nombre del producto">
+                    <div class="panel-hud bloque-staff-independiente">
+                        <h3 class="titulo-panel">AGREGAR PRODUCTO AL CATALOGO</h3>
+                        <form id="form-nuevo-snack" class="form-vertical-apilado">
+                            <label for="nuevo-snack-nombre">Nombre del Producto:</label>
+                            <input type="text" id="nuevo-snack-nombre" placeholder="Ej. Hot Dog Supreme">
+
+                            <label for="nuevo-snack-categoria">Categoria:</label>
                             <select id="nuevo-snack-categoria">
                                 <option value="comida">Comida</option>
                                 <option value="bebida">Bebida</option>
                                 <option value="combo">Combo</option>
                             </select>
+
+                            <label for="nuevo-snack-precio">Precio (Bs):</label>
                             <input type="number" id="nuevo-snack-precio" value="18" min="5" max="200">
-                            <input type="text" id="nuevo-snack-desc" placeholder="Descripcion">
-                            <button type="submit" style="width:100%; margin-top:8px;">Agregar Producto</button>
+
+                            <label for="nuevo-snack-desc">Descripcion:</label>
+                            <input type="text" id="nuevo-snack-desc" placeholder="Ingredientes o detalles">
+
+                            <button type="submit" class="btn-primario-bloque">Agregar Producto en Vivo</button>
                         </form>
                     </div>
 
-                    <div class="panel-hud">
-                        <h3 class="titulo-panel">RESERVAS DE ESTACIONES</h3>
+                    <div class="panel-hud bloque-staff-independiente">
+                        <h3 class="titulo-panel">BANDEJA DE RESERVAS PENDIENTES</h3>
                         <ul id="lista-reservas-encargado" class="lista-gestion">
                             <li class="item-gestion vacio-gestion">Sin reservas pendientes.</li>
                         </ul>
                     </div>
 
-                    <div class="panel-hud">
+                    <div class="panel-hud bloque-staff-independiente">
                         <h3 class="titulo-panel">CONSULTAS DE CLIENTES</h3>
                         <ul id="lista-consultas-encargado" class="lista-gestion">
                             <li class="item-gestion vacio-gestion">Sin consultas nuevas.</li>
@@ -527,25 +542,59 @@
                 </div>
             </section>
 
-            <section id="vista-bitacora" class="vista-hud solo-admin">
+            <section id="vista-bitacora" class="vista-hud">
                 <div class="barra-vista-interna">
                     <div class="vista-interna-header">
                         <button class="btn-volver" data-accion="Volver al Lobby">&lt; Lobby</button>
-                        <h2 class="titulo-vista">AUDITORIA ADMIN</h2>
+                        <h2 class="titulo-vista">CONTROL TOTAL (ADMIN)</h2>
                     </div>
-                    <button id="btn-limpiar-log" data-accion="Limpiar Bitacora">Purgar Registros</button>
                 </div>
 
                 <div class="contenedor-scroll-vista">
-                    <div id="metricas-admin" class="metricas-grid-admin">
-                        <div class="tarjeta-metrica-admin"><span>EVENTOS</span><strong id="metrica-eventos">0</strong></div>
-                        <div class="tarjeta-metrica-admin"><span>RESERVAS</span><strong id="metrica-reservas">0</strong></div>
-                        <div class="tarjeta-metrica-admin"><span>COLA FIFO</span><strong id="metrica-cola">0</strong></div>
-                        <div class="tarjeta-metrica-admin"><span>LIKES</span><strong id="metrica-likes">0</strong></div>
-                    </div>
+                    <div class="admin-modulos-stack">
+                        <div class="tarjeta-colapsable-admin panel-hud">
+                            <button type="button" class="btn-toggle-admin-card abierto" data-panel="admin-panel-metricas">
+                                <span>METRICAS DE EVENTOS</span>
+                                <span class="estado-toggle">Ocultar [-]</span>
+                            </button>
+                            <div id="admin-panel-metricas" class="admin-card-body">
+                                <div id="metricas-admin" class="metricas-grid-admin">
+                                    <div class="tarjeta-metrica-admin"><span>EVENTOS</span><strong id="metrica-eventos">0</strong></div>
+                                    <div class="tarjeta-metrica-admin"><span>RESERVAS</span><strong id="metrica-reservas">0</strong></div>
+                                    <div class="tarjeta-metrica-admin"><span>LIKES</span><strong id="metrica-likes">0</strong></div>
+                                </div>
+                            </div>
+                        </div>
 
-                    <div class="panel-bitacora-full">
-                        <div id="log-output" class="consola-eventos"></div>
+                        <div class="tarjeta-colapsable-admin panel-hud">
+                            <button type="button" class="btn-toggle-admin-card abierto" data-panel="admin-panel-fifo">
+                                <span>COLA OFFLINE-FIRST FIFO</span>
+                                <span class="estado-toggle">Ocultar [-]</span>
+                            </button>
+                            <div id="admin-panel-fifo" class="admin-card-body">
+                                <div class="barra-estado-fifo">
+                                    <span>Red: <strong id="admin-estado-red">ONLINE</strong></span>
+                                    <span>Pendientes: <strong id="metrica-cola">0</strong></span>
+                                </div>
+                                <ul id="lista-cola-fifo-admin" class="lista-gestion">
+                                    <li class="item-gestion vacio-gestion">Sin pedidos pendientes en cola FIFO.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="tarjeta-colapsable-admin panel-hud">
+                            <button type="button" class="btn-toggle-admin-card abierto" data-panel="admin-panel-auditoria">
+                                <span>AUDITORIA DOM</span>
+                                <span class="estado-toggle">Ocultar [-]</span>
+                            </button>
+                            <div id="admin-panel-auditoria" class="admin-card-body">
+                                <div class="cabecera-panel-der">
+                                    <span class="info-bitacora">Registro sanitizado con .text()</span>
+                                    <button type="button" id="btn-limpiar-log" data-accion="Limpiar Bitacora">Purgar</button>
+                                </div>
+                                <div id="log-output" class="consola-eventos"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -616,7 +665,7 @@
                         <strong><span id="modal-total">0</span> Bs</strong>
                     </div>
 
-                    <form id="form-checkout">
+                    <form id="form-checkout" class="form-vertical-apilado">
                         <label for="input-nombre-cliente">Nombre del Jugador / Cliente:</label>
                         <input type="text" id="input-nombre-cliente" placeholder="Ej. Alex Mercer" required>
 

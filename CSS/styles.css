@@ -6,10 +6,8 @@
 
 html, body {
     min-height: 100dvh;
-    height: 100dvh;
-    max-height: 100dvh;
-    overflow: hidden;
     margin: 0;
+    overflow-x: hidden;
 }
 
 body {
@@ -192,25 +190,23 @@ body.modo-claro .caja-login h2 {
 #app-hud {
     min-height: 100dvh;
     height: 100dvh;
-    max-height: 100dvh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
 }
 
 #hud-header {
-    height: 9dvh;
-    min-height: 56px;
-    max-height: 70px;
+    min-height: 64px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 18px;
+    padding: 8px 18px;
     background: rgba(5, 7, 18, 0.94);
     border-bottom: 2px solid #00c8ff;
     box-shadow: 0 0 16px rgba(0, 200, 255, 0.45);
     z-index: 60;
     position: relative;
+    flex-shrink: 0;
 }
 
 body.modo-claro #hud-header {
@@ -503,20 +499,67 @@ body.modo-claro #menu-movil {
 
 #hud-main {
     flex: 1;
-    height: 91dvh;
-    max-height: 91dvh;
+    min-height: 0;
     padding: 10px 16px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    gap: 10px;
+}
+
+.barra-tabs-rol {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: rgba(9, 12, 26, 0.92);
+    border: 2px solid #00c8ff;
+    flex-shrink: 0;
+}
+
+body.modo-claro .barra-tabs-rol {
+    background: rgba(255, 255, 255, 0.96);
+    border-color: #cbd5e1;
+}
+
+.tab-rol {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 8px 18px;
+    border: 2px solid #00c8ff;
+    background: rgba(0, 200, 255, 0.1);
+    color: #e2f1ff;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.tab-rol.activo {
+    background: linear-gradient(90deg, #00ff88, #00c8ff);
+    border-color: #00ff88;
+    color: #04101a;
+    box-shadow: 0 0 14px rgba(0, 255, 136, 0.45);
+}
+
+body.modo-claro .tab-rol {
+    color: #0f172a;
+    background: #f1f5f9;
+    border-color: #94a3b8;
+}
+
+body.modo-claro .tab-rol.activo {
+    background: #0284c7;
+    border-color: #0284c7;
+    color: #ffffff;
 }
 
 .vista-hud {
     display: none;
-    height: 100%;
-    max-height: 100%;
+    flex: 1;
+    min-height: 0;
     flex-direction: column;
     overflow: hidden;
+    gap: 10px;
 }
 
 .vista-hud.vista-activa {
@@ -993,13 +1036,51 @@ body.modo-claro .contenedor-log-mini {
     font-weight: 700;
 }
 
+.form-vertical-apilado {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.form-vertical-apilado label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: #93c5fd;
+    margin-top: 2px;
+}
+
+body.modo-claro .form-vertical-apilado label {
+    color: #1e293b;
+}
+
+.form-vertical-apilado input,
+.form-vertical-apilado select {
+    width: 100%;
+    min-width: 0;
+}
+
+.btn-primario-bloque {
+    width: 100%;
+    min-height: 44px;
+    margin-top: 4px;
+    border-color: #00ff88;
+    color: #04101a;
+    background: linear-gradient(90deg, #00ff88, #00c8ff);
+}
+
 .hud-dock {
-    height: 9dvh;
-    min-height: 60px;
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 6px;
-    padding-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-top: 6px;
+    flex-shrink: 0;
+}
+
+.hud-dock > * {
+    flex: 1 1 140px;
+    min-height: 52px;
 }
 
 .btn-nav-hud {
@@ -1114,7 +1195,9 @@ body.modo-claro .titulo-vista {
 
 .contenedor-scroll-vista {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
+    max-height: calc(100dvh - 180px);
     padding-right: 4px;
 }
 
@@ -1300,8 +1383,23 @@ body.modo-claro .img-snack-dinamica {
 
 .panel-encargado-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px;
+    align-items: start;
+}
+
+.bloque-staff-independiente {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+}
+
+.respuesta-encargado-box {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 4px;
 }
 
 .lista-gestion {
@@ -1328,15 +1426,63 @@ body.modo-claro .item-gestion {
     color: #0f172a;
 }
 
+.admin-modulos-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.tarjeta-colapsable-admin {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.btn-toggle-admin-card {
+    width: 100%;
+    min-height: 44px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: rgba(0, 200, 255, 0.14);
+    border: 1px solid #00c8ff;
+    color: #ffcc00;
+    font-size: 12px;
+}
+
+body.modo-claro .btn-toggle-admin-card {
+    background: #e0f2fe;
+    border-color: #0284c7;
+    color: #0369a1;
+}
+
+.admin-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.barra-estado-fifo {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: rgba(0, 255, 136, 0.08);
+    border: 1px solid #00ff88;
+    font-size: 13px;
+}
+
 .metricas-grid-admin {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 10px;
-    margin-bottom: 12px;
 }
 
 .tarjeta-metrica-admin {
-    padding: 10px;
+    padding: 12px;
     background: rgba(0, 255, 136, 0.08);
     border: 1px solid #00ff88;
     text-align: center;
@@ -1349,18 +1495,9 @@ body.modo-claro .item-gestion {
     color: #ffcc00;
 }
 
-.panel-bitacora-full {
-    background: rgba(6, 8, 20, 0.92);
-    border: 2px solid #00ff88;
-    padding: 12px;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
 .consola-eventos {
-    flex: 1;
-    max-height: 58dvh;
+    min-height: 180px;
+    max-height: 320px;
     overflow-y: auto;
     font-family: monospace;
     font-size: 12px;
@@ -1486,8 +1623,8 @@ body.modo-claro .modal-contenido {
     color: #ff9900;
 }
 
-.solo-encargado,
-.solo-admin {
+.permiso-encargado,
+.permiso-admin {
     display: none;
 }
 
@@ -1497,19 +1634,14 @@ body.modo-claro .modal-contenido {
     }
 
     .lobby-grid,
-    .panel-encargado-grid {
+    .panel-encargado-grid,
+    .metricas-grid-admin {
         grid-template-columns: 1fr;
         overflow-y: auto;
     }
 
     #btn-menu {
         display: inline-flex;
-    }
-
-    .hud-dock {
-        grid-template-columns: repeat(3, 1fr);
-        height: auto;
-        min-height: auto;
     }
 }
 

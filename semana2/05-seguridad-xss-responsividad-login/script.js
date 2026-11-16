@@ -104,11 +104,31 @@ $(document).ready(function () {
 
     function actualizarMetricasAdmin() {
         var colaLocal = localStorage.getItem('colaSincronizacionCiber');
-        var cantidadCola = colaLocal ? JSON.parse(colaLocal).length : 0;
+        var listaCola = [];
+        try {
+            listaCola = colaLocal ? JSON.parse(colaLocal) : [];
+        } catch (errorCola) {
+            listaCola = [];
+        }
         $('#metrica-eventos').text(contadorEventos);
         $('#metrica-reservas').text(contadorReservasAprobadas);
-        $('#metrica-cola').text(cantidadCola);
+        $('#metrica-cola').text(listaCola.length);
         $('#metrica-likes').text(contadorLikes);
+        $('#admin-estado-red').text(navigator.onLine ? 'ONLINE' : 'OFFLINE LOCAL');
+
+        var $listaFifo = $('#lista-cola-fifo-admin');
+        $listaFifo.empty();
+        if (listaCola.length === 0) {
+            $listaFifo.append($('<li>').addClass('item-gestion vacio-gestion').text('Sin pedidos pendientes en cola FIFO.'));
+        } else {
+            for (var indiceCola = 0; indiceCola < listaCola.length; indiceCola++) {
+                var registroCola = listaCola[indiceCola];
+                var $filaCola = $('<li>').addClass('item-gestion');
+                $filaCola.append($('<strong>').text('Cliente: ' + (registroCola.cliente || 'Invitado')));
+                $filaCola.append($('<span>').text('Total: ' + (registroCola.montoTotal || 0) + ' Bs | Pago: ' + (registroCola.formaPago || 'N/A')));
+                $listaFifo.append($filaCola);
+            }
+        }
     }
 
     function registrarBitacora(tipoEvento, detalleEvento) {
@@ -122,7 +142,6 @@ $(document).ready(function () {
 
         $filaLog.append($spanHora, $spanTipo, $spanDetalle);
         $('#log-output').prepend($filaLog);
-        $('#log-mini').prepend($filaLog.clone());
         actualizarMetricasAdmin();
     }
 
@@ -133,12 +152,17 @@ $(document).ready(function () {
         } else {
             $badgeRed.addClass('offline').text('OFFLINE LOCAL');
         }
+        actualizarMetricasAdmin();
     }
 
     function aplicarPermisosRol(sesionObj) {
         if (!sesionObj || !sesionObj.rol) {
             $('#pantalla-login').fadeIn('fast');
-            $('.solo-encargado, .solo-admin').hide();
+            $('.permiso-encargado, .permiso-admin').hide();
+            $('.vista-hud').removeClass('vista-activa').hide();
+            $('#vista-lobby').addClass('vista-activa').show();
+            $('.tab-rol').removeClass('activo');
+            $('.tab-rol[data-vista="vista-lobby"]').addClass('activo');
             return;
         }
 
@@ -147,14 +171,17 @@ $(document).ready(function () {
         var etiquetaRol = rolActual === 'admin' ? 'ADMINISTRADOR' : (rolActual === 'encargado' ? 'ENCARGADO' : 'CLIENTE');
         $('#hud-jugador').text(etiquetaRol + ': ' + sesionObj.usuario);
 
-        if (rolActual === 'cliente') {
-            $('.solo-encargado, .solo-admin').hide();
-        } else if (rolActual === 'encargado') {
-            $('.solo-encargado').show();
-            $('.solo-admin').hide();
+        $('.permiso-encargado, .permiso-admin').hide();
+        if (rolActual === 'encargado') {
+            $('.permiso-encargado').show();
         } else if (rolActual === 'admin') {
-            $('.solo-encargado, .solo-admin').show();
+            $('.permiso-encargado, .permiso-admin').show();
         }
+
+        $('.vista-hud').removeClass('vista-activa').hide();
+        $('#vista-lobby').addClass('vista-activa').show();
+        $('.tab-rol').removeClass('activo');
+        $('.tab-rol[data-vista="vista-lobby"]').addClass('activo');
 
         registrarBitacora('SESION ROL', 'Acceso autorizado como ' + etiquetaRol + ' (' + sesionObj.usuario + ')');
     }
@@ -335,21 +362,35 @@ $(document).ready(function () {
                 return respuestaServidor.json();
             })
             .then(function (datosCatalogoSnacks) {
-                var fragmentoHtml = '';
+                var $grillaSnacks = $('.grilla-snacks');
+                $grillaSnacks.empty();
                 for (var indiceSnack = 0; indiceSnack < datosCatalogoSnacks.length; indiceSnack++) {
                     var item = datosCatalogoSnacks[indiceSnack];
-                    var claseCombo = item.esCombo ? ' card-combo' : '';
-                    fragmentoHtml += `
-                        <div class="card-snack${claseCombo}" data-categoria="${item.categoria}" data-prod="${item.nombre}" data-precio="${item.precio}">
-                            <span class="tag-snack">${item.etiqueta}</span>
-                            <img src="${item.imagen}" srcset="${item.imagen} 150w, ${item.imagen} 600w, ${item.imagen} 1080w" sizes="(max-width: 768px) 150px, (max-width: 1200px) 600px, 1080px" alt="${item.nombre}" loading="lazy" width="120" height="120" class="img-snack-dinamica">
-                            <h3>${item.nombre}</h3>
-                            <p>${item.descripcion}</p>
-                            <div class="precio-snack">${item.precio} Bs</div>
-                            <button class="btn-pedir-snack">Anadir al Pedido</button>
-                        </div>`;
+                    var $tarjetaSnack = $('<div>')
+                        .addClass('card-snack' + (item.esCombo ? ' card-combo' : ''))
+                        .attr({
+                            'data-categoria': item.categoria,
+                            'data-prod': item.nombre,
+                            'data-precio': item.precio
+                        });
+                    var $tagSnack = $('<span>').addClass('tag-snack').text(item.etiqueta || '');
+                    var $imgSnack = $('<img>').addClass('img-snack-dinamica').attr({
+                        src: item.imagen || '',
+                        srcset: (item.imagen || '') + ' 150w, ' + (item.imagen || '') + ' 600w, ' + (item.imagen || '') + ' 1080w',
+                        sizes: '(max-width: 768px) 150px, (max-width: 1200px) 600px, 1080px',
+                        alt: item.nombre || 'Snack LevelUp',
+                        loading: 'lazy',
+                        width: '120',
+                        height: '120'
+                    });
+                    var $tituloSnack = $('<h3>').text(item.nombre || '');
+                    var $descSnack = $('<p>').text(item.descripcion || '');
+                    var $precioSnack = $('<div>').addClass('precio-snack').text((item.precio || 0) + ' Bs');
+                    var $btnPedir = $('<button>').addClass('btn-pedir-snack').text('Anadir al Pedido');
+
+                    $tarjetaSnack.append($tagSnack, $imgSnack, $tituloSnack, $descSnack, $precioSnack, $btnPedir);
+                    $grillaSnacks.append($tarjetaSnack);
                 }
-                $('.grilla-snacks').html(fragmentoHtml);
             })
             .catch(function (errorSnacks) {
                 registrarBitacora('ERROR ASYNC', 'Error al consultar snacks: ' + errorSnacks.message);
@@ -408,22 +449,29 @@ $(document).ready(function () {
         var rolUsuario = sesionTexto ? JSON.parse(sesionTexto).rol : 'cliente';
 
         if (idVista === 'vista-bitacora' && rolUsuario !== 'admin') {
-            mostrarToastAlerta('ACCESO DENEGADO', 'La Bitacora DOM es exclusiva de Administrador.', 'toast-alerta-naranja');
+            mostrarToastAlerta('ACCESO DENEGADO', 'Control Total es exclusivo de Administrador.', 'toast-alerta-naranja');
             return;
         }
         if (idVista === 'vista-encargado' && rolUsuario === 'cliente') {
-            mostrarToastAlerta('ACCESO DENEGADO', 'El panel de gestion es para Encargado o Admin.', 'toast-alerta-naranja');
+            mostrarToastAlerta('ACCESO DENEGADO', 'Gestion de Staff es exclusivo para Encargado o Admin.', 'toast-alerta-naranja');
             return;
         }
 
-        $('.vista-hud').removeClass('vista-activa').stop(true, true).fadeOut('fast').promise().done(function () {
-            $('#' + idVista).fadeIn('fast').addClass('vista-activa');
-            if (idVista === 'vista-consolas') {
-                activarFiltroConsolaEspecifico(consolaOpcional || 'todos', temaFondo || 'playstation', tituloTema || 'Hangar de Consolas');
-            } else {
-                aplicarTemaFondo(temaFondo, tituloTema);
-            }
-        });
+        $('.tab-rol').removeClass('activo');
+        if (idVista === 'vista-encargado' || idVista === 'vista-bitacora') {
+            $('.tab-rol[data-vista="' + idVista + '"]').addClass('activo');
+        } else {
+            $('.tab-rol[data-vista="vista-lobby"]').addClass('activo');
+        }
+
+        $('.vista-hud').removeClass('vista-activa').stop(true, true).hide();
+        $('#' + idVista).addClass('vista-activa').fadeIn('fast');
+
+        if (idVista === 'vista-consolas') {
+            activarFiltroConsolaEspecifico(consolaOpcional || 'todos', temaFondo || 'playstation', tituloTema || 'Hangar de Consolas');
+        } else {
+            aplicarTemaFondo(temaFondo, tituloTema);
+        }
     }
 
     function iniciarRelojPromo10Minutos() {
@@ -716,7 +764,7 @@ $(document).ready(function () {
         registrarBitacora('NAVEGACION MOVIL', 'Cambio de vista hacia: ' + tituloDestino);
     });
 
-    $(document).off('click', '.btn-nav-hud, .btn-acceso-lateral').on('click', '.btn-nav-hud, .btn-acceso-lateral', function () {
+    $(document).off('click', '.btn-nav-hud, .btn-acceso-lateral, .tab-rol').on('click', '.btn-nav-hud, .btn-acceso-lateral, .tab-rol', function () {
         var vistaDestino = $(this).attr('data-vista');
         var temaDestino = $(this).attr('data-tema') || '';
         var tituloDestino = $(this).attr('data-titulo') || 'Lobby Principal';
@@ -725,6 +773,14 @@ $(document).ready(function () {
             cambiarVistaExclusiva(vistaDestino, temaDestino, tituloDestino, consolaDestino);
             registrarBitacora('NAVEGACION', 'Ingreso a: ' + tituloDestino);
         }
+    });
+
+    $(document).off('click', '.btn-toggle-admin-card').on('click', '.btn-toggle-admin-card', function () {
+        var $botonToggle = $(this);
+        $botonToggle.toggleClass('abierto');
+        var estaAbierto = $botonToggle.hasClass('abierto');
+        $botonToggle.find('.estado-toggle').text(estaAbierto ? 'Ocultar [-]' : 'Mostrar [+]');
+        $botonToggle.next('.admin-card-body').slideToggle('fast');
     });
 
     $(document).off('click', '.btn-volver').on('click', '.btn-volver', function () {
@@ -969,7 +1025,6 @@ $(document).ready(function () {
 
     $(document).off('click', '#btn-limpiar-log').on('click', '#btn-limpiar-log', function () {
         $('#log-output').empty();
-        $('#log-mini').empty();
         contadorEventos = 0;
         registrarBitacora('SISTEMA', 'Historial de bitacora reiniciado por Administrador');
     });
@@ -1072,13 +1127,14 @@ $(document).ready(function () {
     });
 
     window.addEventListener('online', function () {
+        actualizarEstadoRed();
         var colaSerializada = localStorage.getItem('colaSincronizacionCiber');
         if (colaSerializada) {
             var colaPedidos = JSON.parse(colaSerializada);
             if (Array.isArray(colaPedidos) && colaPedidos.length > 0) {
                 var totalSincronizados = 0;
                 while (colaPedidos.length > 0) {
-                    let registro = colaPedidos.shift();
+                    var registro = colaPedidos.shift();
                     totalSincronizados = totalSincronizados + 1;
                     agregarReservaPanelEncargado(registro.items.join(' | ') + ' [' + registro.montoTotal + ' Bs]', registro.cliente);
                     registrarBitacora('SINCRONIZACION FIFO', 'Pedido sincronizado de: ' + registro.cliente + ' por ' + registro.montoTotal + ' Bs (' + registro.items.length + ' items)');

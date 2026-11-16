@@ -1,4 +1,4 @@
-const NOMBRE_CACHE_PWA = 'levelup-pwa-v4';
+const NOMBRE_CACHE_PWA = 'levelup-pwa-v5';
 const RECURSOS_PWA = [
     './',
     'index.html',

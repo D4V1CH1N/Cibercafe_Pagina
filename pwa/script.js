@@ -115,6 +115,21 @@ $(document).ready(function () {
         $('#metrica-reservas').text(reservasActivas.length);
         $('#metrica-cola').text(colaPendiente.length);
         $('#metrica-likes').text(contadorLikes);
+        $('#admin-estado-red').text(navigator.onLine ? 'ONLINE' : 'OFFLINE LOCAL');
+
+        var $listaFifo = $('#lista-cola-fifo-admin');
+        $listaFifo.empty();
+        if (colaPendiente.length === 0) {
+            $listaFifo.append($('<li>').addClass('item-gestion vacio-gestion').text('Sin pedidos pendientes en cola FIFO.'));
+        } else {
+            for (var indiceCola = 0; indiceCola < colaPendiente.length; indiceCola++) {
+                var registroCola = colaPendiente[indiceCola];
+                var $filaCola = $('<li>').addClass('item-gestion');
+                $filaCola.append($('<strong>').text('Cliente: ' + (registroCola.nombre || registroCola.cliente || 'Invitado')));
+                $filaCola.append($('<span>').text('Total: ' + (registroCola.total || registroCola.montoTotal || 0) + ' Bs | Pago: ' + (registroCola.formaPago || 'N/A')));
+                $listaFifo.append($filaCola);
+            }
+        }
     }
 
     function registrarEvento(tipoEvento, descripcionMensaje) {
@@ -133,12 +148,6 @@ $(document).ready(function () {
         $lineaEvento.append($spanHora, ' ', $spanTag, $spanMensaje);
         $('#log-output').prepend($lineaEvento);
 
-        var $lineaMini = $('<div>').addClass('mini-linea').text('[' + horaTexto + '] ' + tipoEvento + ': ' + descripcionMensaje);
-        $('#log-mini').prepend($lineaMini);
-
-        if ($('#log-mini .mini-linea').length > 4) {
-            $('#log-mini .mini-linea').last().remove();
-        }
         actualizarMetricasAdmin();
     }
 
@@ -160,19 +169,23 @@ $(document).ready(function () {
         } else {
             $badgeRed.text('OFFLINE').addClass('offline-activo');
         }
+        actualizarMetricasAdmin();
     }
 
     function aplicarPermisosRol(rolActivo, nombreUsuario) {
-        $('.solo-encargado').hide();
-        $('.solo-admin').hide();
+        $('.permiso-encargado, .permiso-admin').hide();
         $('#hud-jugador').text(nombreUsuario + ' (' + rolActivo.toUpperCase() + ')');
 
         if (rolActivo === 'encargado') {
-            $('.solo-encargado').show();
+            $('.permiso-encargado').show();
         } else if (rolActivo === 'admin') {
-            $('.solo-encargado').show();
-            $('.solo-admin').show();
+            $('.permiso-encargado, .permiso-admin').show();
         }
+
+        $('.vista-hud').removeClass('vista-activa').hide();
+        $('#vista-lobby').addClass('vista-activa').css('display', 'flex');
+        $('.tab-tactil, .tab-rol').removeClass('activo');
+        $('.tab-tactil[data-vista="vista-lobby"], .tab-rol[data-vista="vista-lobby"]').addClass('activo');
     }
 
     function verificarSesionInicial() {
@@ -189,6 +202,7 @@ $(document).ready(function () {
         } catch (errorSesion) {
             localStorage.removeItem('sesionRolLevelUp');
         }
+        aplicarPermisosRol('cliente', 'Invitado');
         $('#pantalla-login').css('display', 'flex');
     }
 
@@ -368,13 +382,21 @@ $(document).ready(function () {
 
             var $tagCategoria = $('<span>').addClass('tag-snack').text(String(snackItem.categoria).toUpperCase());
             var rutaImagen = snackItem.imagen || '';
-            var htmlImagen = `<img src="${rutaImagen}" srcset="${rutaImagen} 150w, ${rutaImagen} 600w, ${rutaImagen} 1080w" sizes="(max-width: 600px) 150px, 600px" loading="lazy" alt="${snackItem.nombre}" width="120" height="120" class="img-snack-dinamica">`;
+            var $imagenSnack = $('<img>').addClass('img-snack-dinamica').attr({
+                src: rutaImagen,
+                srcset: rutaImagen + ' 150w, ' + rutaImagen + ' 600w, ' + rutaImagen + ' 1080w',
+                sizes: '(max-width: 600px) 150px, 600px',
+                loading: 'lazy',
+                alt: snackItem.nombre || 'Snack LevelUp',
+                width: '120',
+                height: '120'
+            });
             var $tituloSnack = $('<h4>').text(snackItem.nombre);
             var $descSnack = $('<p>').text(snackItem.descripcion || '');
             var $precioSnack = $('<div>').addClass('precio-snack').text(snackItem.precio + ' Bs');
             var $botonSnack = $('<button>').addClass('btn-pedir-snack').text('Agregar al Pedido');
 
-            $tarjetaSnack.append($tagCategoria, $(htmlImagen), $tituloSnack, $descSnack, $precioSnack, $botonSnack);
+            $tarjetaSnack.append($tagCategoria, $imagenSnack, $tituloSnack, $descSnack, $precioSnack, $botonSnack);
             $contenedorSnacks.append($tarjetaSnack);
         });
     }
@@ -422,11 +444,14 @@ $(document).ready(function () {
             return;
         }
 
-        $('.vista-hud').removeClass('vista-activa');
-        $('#' + idVista).addClass('vista-activa');
-        $('.tab-tactil').removeClass('activo');
-        $('.tab-tactil[data-vista="' + idVista + '"]').addClass('activo');
+        $('.vista-hud').removeClass('vista-activa').hide();
+        $('#' + idVista).addClass('vista-activa').css('display', 'flex');
+        $('.tab-tactil, .tab-rol').removeClass('activo');
+        $('.tab-tactil[data-vista="' + idVista + '"], .tab-rol[data-vista="' + idVista + '"]').addClass('activo');
 
+        if (idVista === 'vista-bitacora') {
+            actualizarMetricasAdmin();
+        }
         if (temaAsociado !== undefined) {
             actualizarFondoHUD(temaAsociado);
         }
@@ -553,12 +578,13 @@ $(document).ready(function () {
     $(document).off('click', '#btn-cerrar-sesion').on('click', '#btn-cerrar-sesion', function () {
         localStorage.removeItem('sesionRolLevelUp');
         sesionActual = null;
+        $('.permiso-encargado, .permiso-admin').hide();
         cambiarVistaHUD('vista-lobby', '', 'Lobby');
         $('#pantalla-login').fadeIn('fast');
         registrarEvento('SESION CERRADA', 'Usuario cerro sesion.');
     });
 
-    $(document).off('click', '.btn-nav-hud').on('click', '.btn-nav-hud', function () {
+    $(document).off('click', '.btn-nav-hud, .tab-rol').on('click', '.btn-nav-hud, .tab-rol', function () {
         var $botonNav = $(this);
         cambiarVistaHUD($botonNav.attr('data-vista'), $botonNav.attr('data-tema'), $botonNav.attr('data-titulo'));
         if ($botonNav.attr('data-consola')) {
@@ -572,6 +598,14 @@ $(document).ready(function () {
                 $('.item-consola[data-consola="' + consolaFiltro + '"]').show();
             }
         }
+    });
+
+    $(document).off('click', '.btn-toggle-admin-card').on('click', '.btn-toggle-admin-card', function () {
+        var $botonToggle = $(this);
+        $botonToggle.toggleClass('abierto');
+        var estaAbierto = $botonToggle.hasClass('abierto');
+        $botonToggle.find('.estado-toggle').text(estaAbierto ? 'Ocultar [-]' : 'Mostrar [+]');
+        $botonToggle.next('.admin-card-body').slideToggle('fast');
     });
 
     $(document).off('click', '.btn-volver').on('click', '.btn-volver', function () {
@@ -819,9 +853,14 @@ $(document).ready(function () {
             $listaConsultas.empty();
         }
         var $itemConsulta = $('<li>').addClass('item-gestion');
-        var $textoSeguro = $('<span>').text('[' + nombreRemitente + ' - ' + correoRemitente + ']: ' + textoConsulta);
-        var $botonResponder = $('<button>').addClass('btn-responder-consulta').text('Marcar Atendida');
-        $itemConsulta.append($textoSeguro, $botonResponder);
+        var $autorTexto = $('<strong>').text(nombreRemitente + ' (' + correoRemitente + ')');
+        var $mensajeTexto = $('<p>').text(textoConsulta);
+        var $cajaRespuesta = $('<div>').addClass('respuesta-encargado-box');
+        var $inputRespuesta = $('<input>').attr('type', 'text').attr('placeholder', 'Escribir respuesta al cliente...').addClass('input-respuesta-encargado');
+        var $botonResponder = $('<button>').attr('type', 'button').addClass('btn-responder-consulta').text('Enviar Respuesta');
+        var $salidaRespuesta = $('<span>').addClass('texto-respuesta-emitida');
+        $cajaRespuesta.append($inputRespuesta, $botonResponder, $salidaRespuesta);
+        $itemConsulta.append($autorTexto, $mensajeTexto, $cajaRespuesta);
         $listaConsultas.prepend($itemConsulta);
 
         $('#form-consulta-cliente')[0].reset();
@@ -861,9 +900,16 @@ $(document).ready(function () {
     });
 
     $(document).off('click', '.btn-responder-consulta').on('click', '.btn-responder-consulta', function () {
-        var $botonAtender = $(this);
-        $botonAtender.prop('disabled', true).text('Atendida');
-        registrarEvento('ENCARGADO', 'Consulta de cliente marcada como atendida.');
+        var $itemConsulta = $(this).closest('.item-gestion');
+        var respuestaTexto = $itemConsulta.find('.input-respuesta-encargado').val().trim();
+        if (respuestaTexto === '') {
+            return;
+        }
+        $itemConsulta.find('.texto-respuesta-emitida').text('Respondido: ' + respuestaTexto);
+        $itemConsulta.find('.input-respuesta-encargado').val('').prop('disabled', true);
+        $(this).prop('disabled', true).text('Atendida');
+        registrarEvento('ENCARGADO', 'Consulta respondida de forma segura.');
+        mostrarToast('CONSULTA RESPONDIDA', 'Se registro la respuesta al cliente.', false);
     });
 
     $(document).off('click', '#btn-abrir-modal').on('click', '#btn-abrir-modal', function () {
