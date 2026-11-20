@@ -1,22 +1,33 @@
-const NOMBRE_CACHE_ESTATICO = 'levelup-arcade-v5';
+// Semana 2 - Arquitectura PWA Offline-First
+const NOMBRE_CACHE_ESTATICO = 'levelup-arcade-v14';
 const RECURSOS_PRECACHE = [
     './',
     'index.html',
     'CSS/styles.css',
+    'CSS/tarjeta.css',
+    'CSS/layout.css',
+    'JS/supabase-api.js',
     'JS/script.js',
+    'JS/tarjeta.js',
+    'JS/layout.js',
     'manifest.json',
     'data/snacks.json',
     'pwa/index.html',
+    'pwa/horizontal.html',
     'pwa/styles.css',
+    'pwa/styles-horizontal.css',
+    'pwa/tarjeta.css',
+    'pwa/layout.css',
     'pwa/script.js',
+    'pwa/tarjeta.js',
+    'pwa/layout.js',
     'pwa/manifest.json',
     'pwa/sw.js',
     'pwa/icons/icon-192.png',
-    'pwa/icons/icon-512.png',
-    'https://code.jquery.com/jquery-3.7.1.min.js',
-    'https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;600;700&display=swap'
+    'pwa/icons/icon-512.png'
 ];
 
+// Semana 2 - Instalacion Service Worker
 self.addEventListener('install', function (eventoInstalacion) {
     eventoInstalacion.waitUntil(
         caches.open(NOMBRE_CACHE_ESTATICO).then(function (instanciaCache) {
@@ -27,6 +38,7 @@ self.addEventListener('install', function (eventoInstalacion) {
     );
 });
 
+// Semana 2 - Activacion y Limpieza Cache
 self.addEventListener('activate', function (eventoActivacion) {
     eventoActivacion.waitUntil(
         caches.keys().then(function (listaClavesCache) {
@@ -43,7 +55,9 @@ self.addEventListener('activate', function (eventoActivacion) {
     );
 });
 
+// Semana 3 - Backend Supabase
 self.addEventListener('fetch', function (eventoPeticion) {
+    if (eventoPeticion.request.url.includes('supabase.co')) return;
     eventoPeticion.respondWith(
         caches.match(eventoPeticion.request).then(function (respuestaCacheada) {
             if (respuestaCacheada) {

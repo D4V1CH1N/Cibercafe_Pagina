@@ -1,17 +1,24 @@
-const NOMBRE_CACHE_PWA = 'levelup-pwa-v5';
+// Semana 2 - Arquitectura PWA Offline-First
+const NOMBRE_CACHE_PWA = 'levelup-pwa-v15';
 const RECURSOS_PWA = [
     './',
     'index.html',
+    'horizontal.html',
     'styles.css',
+    'styles-horizontal.css',
+    'tarjeta.css',
+    'layout.css',
+    '../JS/supabase-api.js',
     'script.js',
+    'tarjeta.js',
+    'layout.js',
     'manifest.json',
     '../data/snacks.json',
     'icons/icon-192.png',
-    'icons/icon-512.png',
-    'https://code.jquery.com/jquery-3.7.1.min.js',
-    'https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;600;700&display=swap'
+    'icons/icon-512.png'
 ];
 
+// Semana 2 - Instalacion Service Worker
 self.addEventListener('install', function (eventoInstalacion) {
     eventoInstalacion.waitUntil(
         caches.open(NOMBRE_CACHE_PWA).then(function (instanciaCache) {
@@ -22,6 +29,7 @@ self.addEventListener('install', function (eventoInstalacion) {
     );
 });
 
+// Semana 2 - Activacion y Limpieza Cache
 self.addEventListener('activate', function (eventoActivacion) {
     eventoActivacion.waitUntil(
         caches.keys().then(function (listaClavesCache) {
@@ -38,7 +46,9 @@ self.addEventListener('activate', function (eventoActivacion) {
     );
 });
 
+// Semana 3 - Backend Supabase
 self.addEventListener('fetch', function (eventoPeticion) {
+    if (eventoPeticion.request.url.includes('supabase.co')) return;
     eventoPeticion.respondWith(
         caches.match(eventoPeticion.request).then(function (respuestaCacheada) {
             if (respuestaCacheada) {

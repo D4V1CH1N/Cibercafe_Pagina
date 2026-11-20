@@ -1,3 +1,4 @@
+// Semana 1 - Inicializacion DOM y Eventos
 document.addEventListener('DOMContentLoaded', function () {
     var contadorLikes = 0;
     var logOutput = document.getElementById('log-output');
@@ -5,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var buscadorVivo = document.getElementById('buscador-vivo');
     var contadorLikesElemento = document.getElementById('contador-likes');
 
+    // Semana 1 - Bitacora Dia 1 Registro DOM
     function registrarBitacora(tipoEvento, detalleEvento) {
         if (!logOutput) {
             return;
@@ -71,6 +73,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    // Semana 1 - Bitacora Dia 1 Bubbling Dblclick
     document.addEventListener('dblclick', function (eventoDobleClick) {
         var tarjetaObjetivo = eventoDobleClick.target.closest('.card');
         if (tarjetaObjetivo) {
@@ -84,6 +87,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     if (buscadorVivo) {
+        // Semana 1 - Bitacora Dia 1 Keyup Buscador
         buscadorVivo.addEventListener('keyup', function () {
             var terminoBusqueda = buscadorVivo.value.trim().toLowerCase();
             document.querySelectorAll('.card').forEach(function (card) {
@@ -97,6 +101,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var formularioConsulta = document.getElementById('form-consulta');
     var alertaBloque = document.getElementById('alerta-formulario');
     if (formularioConsulta && alertaBloque) {
+        // Semana 1 - Validacion Formulario con Regex
         formularioConsulta.addEventListener('submit', function (eventoFormulario) {
             eventoFormulario.preventDefault();
             var valorNombre = document.getElementById('campo-nombre').value.trim();

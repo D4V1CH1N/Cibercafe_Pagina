@@ -1,0 +1,92 @@
+/* Semana 3 - Componentes Encapsulados BEM */
+.card-item {
+    box-sizing: border-box;
+    background: rgba(11, 16, 36, 0.92);
+    border: 1.5px solid rgba(0, 200, 255, 0.4);
+    border-radius: 12px;
+    padding: 14px;
+    color: #ffffff;
+    font-family: 'Rajdhani', Arial, sans-serif;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    min-width: 0;
+}
+
+body.modo-claro .card-item {
+    background: #ffffff;
+    color: #0f172a;
+    border-color: #cbd5e1;
+}
+
+.card-item.card-item--activo {
+    border-color: #00ff88;
+    box-shadow: 0 0 18px rgba(0, 255, 136, 0.35);
+    transform: translateY(-2px);
+}
+
+body.modo-claro .card-item.card-item--activo {
+    border-color: #16a34a;
+    box-shadow: 0 0 16px rgba(22, 163, 74, 0.25);
+}
+
+.card-item__titulo {
+    margin: 0 0 6px 0;
+    font-family: 'Orbitron', Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #00c8ff;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.modo-claro .card-item__titulo {
+    color: #0369a1;
+}
+
+.card-item__estado {
+    margin: 0 0 10px 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #cbd5e1;
+}
+
+body.modo-claro .card-item__estado {
+    color: #475569;
+}
+
+.card-item.card-item--activo .card-item__estado {
+    color: #00ff88;
+}
+
+body.modo-claro .card-item.card-item--activo .card-item__estado {
+    color: #15803d;
+}
+
+.card-item__btn-simular {
+    width: 100%;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1.5px solid #00c8ff;
+    background: rgba(0, 200, 255, 0.12);
+    color: #00c8ff;
+    font-family: 'Orbitron', Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+body.modo-claro .card-item__btn-simular {
+    color: #0284c7;
+    border-color: #0284c7;
+    background: rgba(2, 132, 199, 0.08);
+}
+
+.card-item.card-item--activo .card-item__btn-simular {
+    background: #00ff88;
+    border-color: #00ff88;
+    color: #04101a;
+}

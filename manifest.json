@@ -4,10 +4,10 @@
   "description": "Sistema HUD y reserva de estaciones para Arcade Bar",
   "start_url": "index.html",
   "scope": "./",
-  "display": "standalone",
+  "display": "browser",
   "background_color": "#070312",
   "theme_color": "#070312",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "icons": [
     {
       "src": "pwa/icons/icon-192.png",

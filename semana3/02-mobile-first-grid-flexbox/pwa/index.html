@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <meta name="theme-color" content="#070312">
+    <script>
+        (function () {
+            var esEscritorio = window.innerWidth > 1024 && !/Android|iPhone|iPad/i.test(navigator.userAgent);
+            if (esEscritorio) {
+                window.location.replace('../index.html');
+            }
+        })();
+    </script>
+    <title>LevelUp Arcade Bar - PWA Movil</title>
+    <!-- Semana 2 - Manifiesto PWA -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="tarjeta.css">
+    <link rel="stylesheet" href="layout.css">
+    <!-- Semana 2 - Registro Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then((registroSw) => console.log('SW activo en alcance:', registroSw.scope))
+                    .catch((errorSw) => console.error('Error SW:', errorSw));
+            });
+        }
+    </script>
+</head>
+
+<body>
+
+    <!-- Semana 2 - Login y Control de 3 Roles -->
+    <div id="pantalla-login">
+        <div class="caja-login">
+            <h2>ACCESO LEVELUP MOVIL</h2>
+            <p class="sub-login">Selecciona tu rol para iniciar sesion en el HUD Android.</p>
+            <div class="accesos-rapidos-rol">
+                <button type="button" class="btn-preset-rol" data-rol="cliente">Cliente</button>
+                <button type="button" class="btn-preset-rol" data-rol="encargado">Encargado</button>
+                <button type="button" class="btn-preset-rol" data-rol="admin">Admin</button>
+            </div>
+            <form id="form-login-rol" class="form-vertical-apilado">
+                <label for="login-usuario">Nombre / GamerTag:</label>
+                <input type="text" id="login-usuario" placeholder="Ej. AlexMercer" required>
+
+                <label for="login-rol">Nivel de Acceso:</label>
+                <select id="login-rol">
+                    <option value="cliente">Cliente (Jugador)</option>
+                    <option value="encargado">Encargado (Staff)</option>
+                    <option value="admin">Administrador (Root)</option>
+                </select>
+
+                <div id="login-error" class="msg-error"></div>
+                <button type="submit" id="btn-ingresar-rol" class="btn-primario-bloque">Ingresar al HUD</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Semana 2 - Notificaciones Toast -->
+    <div id="toast-alert">
+        <div class="toast-titulo" id="toast-titulo">NOTIFICACION DEL SISTEMA</div>
+        <div class="toast-cuerpo" id="toast-cuerpo">Operacion completada correctamente.</div>
+    </div>
+
+    <div id="app-hud">
+
+        <header class="pwa-top-widget-bar">
+            <div class="pill-perfil-flotante">
+                <div class="avatar-box">99</div>
+                <div class="pill-info-col">
+                    <span class="jugador-nombre" id="hud-jugador">Invitado</span>
+                    <span id="indicador-tema" class="pill-zona-tag">Lobby</span>
+                </div>
+                <div class="pill-monedas-box">
+                    <span class="moneda-label">Items:</span>
+                    <span id="hud-items" class="badge-item-pill">0</span>
+                    <span class="separador-punto">/</span>
+                    <span id="hud-total" class="monto-oro-pill">0</span>
+                    <span class="unidad-bs">Bs</span>
+                </div>
+                <span id="estado-red-hud" class="estado-red-badge-movil">ONLINE</span>
+            </div>
+
+            <div class="pwa-top-actions">
+                <label for="toggle-buscador-top" class="btn-top-action btn-lupita-top" title="Abrir Radar de Busqueda">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </label>
+
+                <!-- Semana 1 - Modo Oscuro y Claro -->
+                <button id="btn-tema" class="btn-top-action btn-tema-fab" data-accion="Alternar Modo Noche / Claro" title="Modo">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                    </svg>
+                    <span>Modo</span>
+                </button>
+
+                <button id="btn-cerrar-sesion" class="btn-top-action btn-salir-fab" data-accion="Cerrar Sesion" title="Cerrar Sesion / Cambiar Rol">Salir</button>
+            </div>
+        </header>
+
+        <!-- Semana 2 - Radar de Busqueda en Vivo -->
+        <input type="checkbox" id="toggle-buscador-top" class="toggle-hidden">
+        <div class="overlay-buscador-top">
+            <label for="toggle-buscador-top" class="backdrop-buscador"></label>
+            <div class="caja-buscador-dropdown">
+                <div class="buscador-input-fila">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" id="buscador-rapido" placeholder="Buscar PS5, Xbox, PC, KOF, Pizza..." autocomplete="off">
+                    <label for="toggle-buscador-top" class="btn-cerrar-buscador">X</label>
+                </div>
+                <div id="sugerencias-busqueda">
+                    <div class="item-sugerencia" data-keywords="consolas ps5 playstation fc27 tekken" data-vista="vista-consolas" data-consola="ps5" data-tema="playstation" data-titulo="PlayStation 5">
+                        <span>PlayStation 5 (10 Estaciones)</span>
+                        <span class="sug-precio">15 Bs/h</span>
+                    </div>
+                    <div class="item-sugerencia" data-keywords="xbox series x forza halo" data-vista="vista-consolas" data-consola="xboxsx" data-tema="xbox" data-titulo="Xbox Series X">
+                        <span>Xbox Series X (10 Estaciones)</span>
+                        <span class="sug-precio">15 Bs/h</span>
+                    </div>
+                    <div class="item-sugerencia" data-keywords="pc gamer rtx 4080 ultra" data-vista="vista-pcs" data-tema="pc" data-titulo="Zona PC Gamer RTX">
+                        <span>PCs Gamer RTX 4080 (Gama Ultra)</span>
+                        <span class="sug-precio">25 Bs/h</span>
+                    </div>
+                    <div class="item-sugerencia" data-keywords="arcade kof metal slug sf2" data-vista="vista-arcades" data-tema="arcade" data-titulo="Salon Arcade Retro">
+                        <span>Salon Arcade Retro (25 Gabinetes)</span>
+                        <span class="sug-precio">2 Bs/ficha</span>
+                    </div>
+                    <div class="item-sugerencia" data-keywords="hamburguesa pizza snack alitas" data-vista="vista-snacks" data-tema="comida" data-titulo="Comida y Snacks">
+                        <span>Menu de Snacks y Combos Gamer</span>
+                        <span class="sug-precio">Desde 10 Bs</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="fab-carrito-container">
+            <input type="checkbox" id="toggle-carrito-drawer" class="toggle-hidden">
+            <label for="toggle-carrito-drawer" class="fab-item fab-carrito" title="Ver Carrito de Pedidos">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="9" cy="21" r="1"></circle>
+                    <circle cx="20" cy="21" r="1"></circle>
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                </svg>
+            </label>
+            <div class="drawer-carrito-sheet">
+                <label for="toggle-carrito-drawer" class="backdrop-cart"></label>
+                <div class="panel-hud panel-carrito-drawer">
+                    <div class="cabecera-panel-der">
+                        <h3 class="titulo-panel">INVENTARIO DE ORDEN</h3>
+                        <div class="acciones-cart-top">
+                            <button id="btn-vaciar-carrito" data-accion="Vaciar Carrito">Limpiar</button>
+                            <label for="toggle-carrito-drawer" class="btn-cerrar-drawer">X</label>
+                        </div>
+                    </div>
+                    <ul id="lista-carrito">
+                        <li class="carrito-vacio">Sin reservas ni snacks activos.</li>
+                    </ul>
+                    <div class="pie-carrito-fijo">
+                        <div class="caja-total-lobby">
+                            <span>TOTAL:</span>
+                            <strong id="lobby-total-texto">0 Bs</strong>
+                        </div>
+                        <button id="btn-abrir-modal" data-accion="Abrir Modal de Confirmacion">CONFIRMAR RESERVA / PEDIDO</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <aside class="fab-lateral-group">
+            <button class="fab-item btn-nav-hud tab-tactil permiso-encargado" data-vista="vista-encargado" data-tema="" data-titulo="Staff" title="Gestion de Encargado">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2l3 7h7l-5.5 4.5 2 7L12 16l-6.5 4.5 2-7L2 9h7z"></path>
+                </svg>
+            </button>
+
+            <button class="fab-item btn-nav-hud tab-tactil permiso-admin" data-vista="vista-bitacora" data-tema="" data-titulo="Control Total" title="Control Total y Bitacora">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="4 17 10 11 4 5"></polyline>
+                    <line x1="12" y1="19" x2="20" y2="19"></line>
+                </svg>
+            </button>
+
+            <div class="fab-social-speeddial">
+                <input type="checkbox" id="toggle-social-menu" class="toggle-hidden">
+                <div class="social-speeddial-items">
+                    <a href="https://wa.me/59100000000" target="_blank" rel="noopener noreferrer" class="fab-item fab-sub-item fab-wa" title="WhatsApp Soporte">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                            <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2zm5.79 14.07c-.24.68-1.4 1.3-1.92 1.38-.49.07-1.12.1-3.23-.77-2.69-1.11-4.43-3.86-4.57-4.04-.13-.18-1.1-1.47-1.1-2.8 0-1.33.69-1.99.94-2.25.24-.26.54-.33.72-.33.18 0 .36 0 .52.01.17.01.39-.06.61.47.24.57.81 1.98.88 2.13.07.15.12.33.02.53-.1.19-.15.31-.29.48-.15.17-.31.37-.44.5-.15.15-.31.31-.13.62.18.31.79 1.3 1.7 2.11 1.17 1.04 2.15 1.36 2.46 1.51.31.15.49.13.67-.08.18-.21.78-.91.99-1.22.21-.31.42-.26.7-.15.28.11 1.79.84 2.1 1 .31.15.52.23.6.36.08.13.08.76-.16 1.44z"></path>
+                        </svg>
+                    </a>
+                    <a href="#" class="fab-item fab-sub-item fab-ig" title="Instagram">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                        </svg>
+                    </a>
+                    <a href="#" class="fab-item fab-sub-item fab-fb" title="Facebook">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                            <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+                        </svg>
+                    </a>
+                </div>
+                <label for="toggle-social-menu" class="fab-item fab-whatsapp" title="Redes Sociales y Soporte">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                        <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2zm5.79 14.07c-.24.68-1.4 1.3-1.92 1.38-.49.07-1.12.1-3.23-.77-2.69-1.11-4.43-3.86-4.57-4.04-.13-.18-1.1-1.47-1.1-2.8 0-1.33.69-1.99.94-2.25.24-.26.54-.33.72-.33.18 0 .36 0 .52.01.17.01.39-.06.61.47.24.57.81 1.98.88 2.13.07.15.12.33.02.53-.1.19-.15.31-.29.48-.15.17-.31.37-.44.5-.15.15-.31.31-.13.62.18.31.79 1.3 1.7 2.11 1.17 1.04 2.15 1.36 2.46 1.51.31.15.49.13.67-.08.18-.21.78-.91.99-1.22.21-.31.42-.26.7-.15.28.11 1.79.84 2.1 1 .31.15.52.23.6.36.08.13.08.76-.16 1.44z"></path>
+                    </svg>
+                </label>
+            </div>
+        </aside>
+
+        <main id="hud-main">
+
+            <!-- Semana 2 - Pestanas Modulares por Rol -->
+            <nav id="barra-tabs-rol" class="barra-tabs-rol" aria-label="Control Modular de Roles">
+                <button type="button" class="tab-rol activo" data-vista="vista-lobby" data-tema="" data-titulo="Lobby">Lobby / Cliente</button>
+                <button type="button" class="tab-rol permiso-encargado" data-vista="vista-encargado" data-tema="" data-titulo="Staff">Gestion de Staff</button>
+                <button type="button" class="tab-rol permiso-admin" data-vista="vista-bitacora" data-tema="" data-titulo="Control Total">Control Total</button>
+            </nav>
+
+            <section id="vista-lobby" class="vista-hud vista-activa">
+                <div class="lobby-grid">
+
+                    <!-- Semana 2 - Oferta Relampago y Cronometro -->
+                    <div id="tarjeta-oferta-relampago" class="alerta-roja-container">
+                        <input type="checkbox" id="toggle-promo" class="toggle-hidden">
+                        <label for="toggle-promo" class="btn-alerta-roja" title="Ver Oferta Flash">
+                            <span class="alerta-pulsar-ring"></span>
+                            <svg class="alerta-icono" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                                <line x1="12" y1="9" x2="12" y2="13"></line>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>
+                            <div class="alerta-textos-col">
+                                <span class="alerta-tag-text">ALERTA OFERTA FLASH</span>
+                                <span class="alerta-sub-text">Toca para reclamar promo</span>
+                            </div>
+                            <span id="timer-oferta-10m" class="timer-alerta-display">10:00</span>
+                        </label>
+
+                        <div class="modal-promo-sheet">
+                            <label for="toggle-promo" class="backdrop-promo"></label>
+                            <div class="panel-hud contenido-promo-sheet">
+                                <div class="cabecera-promo-sheet">
+                                    <span class="badge-promo-activa" id="estado-promo-badge">OFERTA RELAMPAGO ACTIVA</span>
+                                    <label for="toggle-promo" class="btn-cerrar-promo">X</label>
+                                </div>
+                                <h3 class="titulo-promo-lobby">PS5 + 4 CONTROLES (2H) + PIZZA FAMILIAR GRATIS</h3>
+                                <p class="desc-promo-lobby">Contrata 1 PS5 con 4 controles (minimo 2h) antes de que acabe el tiempo y llevate 1 Pizza Familiar GRATIS.</p>
+                                <button id="btn-reclamar-promo"
+                                    data-nombre="PROMO RELAMPAGO: PS5 (2h + 4 Controles) + Pizza Familiar 8 Porciones GRATIS"
+                                    data-precio="45">
+                                    Reclamar Promo (45 Bs + Pizza GRATIS)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="showcase-central">
+                        <div class="showcase-top">
+                            <h1 class="showcase-titulo">LEVELUP ARCADE BAR</h1>
+                            <p class="showcase-sub">Plataforma movil nativa para reservas, snacks y filtro de 3 capas.</p>
+                        </div>
+
+                        <!-- Semana 2 - Filtro de 3 Capas -->
+                        <div class="filtro-cascada-box">
+                            <span class="label-buscador">FILTRO EN CASCADA DE 3 CAPAS</span>
+                            <select id="capa1">
+                                <option value="">1. Selecciona Zona...</option>
+                                <option value="consolas">Consolas</option>
+                                <option value="pcs">PCs Gamer</option>
+                                <option value="arcades">Arcades</option>
+                                <option value="snacks">Snacks</option>
+                            </select>
+                            <select id="capa2" disabled>
+                                <option value="">2. Plataforma...</option>
+                            </select>
+                            <select id="capa3" disabled>
+                                <option value="">3. Modelo...</option>
+                            </select>
+                            <div id="resultadoFiltro" class="resultado-filtro-box">Elige una zona para comenzar.</div>
+                        </div>
+
+                        <!-- Semana 1 - Validacion de Formulario con Regex -->
+                        <div class="bloque-consulta-cliente">
+                            <div id="alerta-consulta-cliente" class="alerta-bloque-top"></div>
+                            <span class="label-buscador">CONSULTAS AL ENCARGADO</span>
+                            <form id="form-consulta-cliente" class="form-vertical-apilado">
+                                <label for="consulta-nombre">Tu Nombre:</label>
+                                <input type="text" id="consulta-nombre" placeholder="Ej. Alex Mercer">
+                                <label for="consulta-correo">Tu Correo Electronico:</label>
+                                <input type="email" id="consulta-correo" placeholder="tu@correo.com">
+                                <label for="consulta-mensaje">Tu Consulta:</label>
+                                <input type="text" id="consulta-mensaje" placeholder="Escribe tu consulta...">
+                                <button type="submit" id="btn-enviar-consulta" class="btn-primario-bloque">Enviar Consulta</button>
+                            </form>
+                        </div>
+
+                                                <!-- Semana 2 - Reservas Anti-XSS -->
+                                                <section class="modulo-reservas">
+                            <h3>Reserva de Sala VIP / Mesa Gamer</h3>
+                            <form id="formReserva" class="form-vertical-apilado">
+                                <label for="clienteNombre">Nombre o Equipo Gamer:</label>
+                                <input type="text" id="clienteNombre" placeholder="Nombre o equipo gamer" required>
+                                <label for="salaSelect">Sala o Estacion:</label>
+                                <select id="salaSelect">
+                                    <option value="Sala VIP PlayStation 5 (20:00 hrs)">Sala VIP PlayStation 5 (20:00 hrs)</option>
+                                    <option value="Arena PC Esports 5v5 (21:30 hrs)">Arena PC Esports 5v5 (21:30 hrs)</option>
+                                    <option value="Mesa Central Arcade (22:00 hrs)">Mesa Central Arcade (22:00 hrs)</option>
+                                </select>
+                                <button type="submit" class="btn-accion">Confirmar Reserva de Sala</button>
+                            </form>
+                            <ul id="listaReservas" class="lista-segura"></ul>
+                        </section>
+
+                        <!-- Semana 2 - Cola Dinamica Blindada -->
+                        <section class="cola-karaoke">
+                            <h3>Cola Musical y Peticiones en Sala</h3>
+                            <div class="cola-karaoke-input-row">
+                                <input type="text" id="inputCancion" placeholder="Pedir cancion, soundtrack o juego...">
+                                <button type="button" id="btnPedir" class="btn-tactil">+ Pedir</button>
+                            </div>
+                            <div id="listaCanciones"></div>
+                        </section>
+
+                        <button id="btn-like-lobby" data-accion="Like al Cibercafe">Dar Like (<span id="contador-likes">0</span>)</button>
+
+                        <!-- Semana 3 - Componentes Encapsulados Grid y Flexbox -->
+                        <div class="panel-showcase-bem">
+                            <div class="barra-demo">
+                                <span class="barra-demo__titulo">CATALOGO ENCAPSULADO (GRID + FLEXBOX)</span>
+                                <button type="button" id="btnSimularVista" class="barra-demo__boton">Simular Vista Movil / Escritorio</button>
+                            </div>
+                            <div class="catalogo-grid">
+                                <article class="card-item" data-id="101">
+                                    <div class="card-item__cuerpo">
+                                        <h3 class="card-item__titulo">PlayStation 5 DualSense</h3>
+                                        <p class="card-item__estado">Estado: Disponible</p>
+                                        <button type="button" class="card-item__btn-simular">Simular Seleccion</button>
+                                    </div>
+                                </article>
+                                <article class="card-item" data-id="102">
+                                    <div class="card-item__cuerpo">
+                                        <h3 class="card-item__titulo">PC Gamer RTX 4080</h3>
+                                        <p class="card-item__estado">Estado: Disponible</p>
+                                        <button type="button" class="card-item__btn-simular">Simular Seleccion</button>
+                                    </div>
+                                </article>
+                                <article class="card-item" data-id="103">
+                                    <div class="card-item__cuerpo">
+                                        <h3 class="card-item__titulo">Combo Gamer LevelUp</h3>
+                                        <p class="card-item__estado">Estado: Disponible</p>
+                                        <button type="button" class="card-item__btn-simular">Simular Seleccion</button>
+                                    </div>
+                                </article>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- Semana 2 - Acordeon Animado jQuery -->
+            <section id="vista-consolas" class="vista-hud">
+                <div class="barra-vista-interna">
+                    <div class="vista-interna-header">
+                        <button class="btn-volver" data-accion="Volver al Lobby">&lt; Lobby</button>
+                        <h2 class="titulo-vista">CONSOLAS</h2>
+                    </div>
+                    <div class="filtros-consolas">
+                        <button class="btn-filtro-consola activo" data-consola="todos" data-tema="playstation">Todas</button>
+                        <button class="btn-filtro-consola" data-consola="ps5" data-tema="playstation">PS5</button>
+                        <button class="btn-filtro-consola" data-consola="ps4" data-tema="playstation">PS4</button>
+                        <button class="btn-filtro-consola" data-consola="ps3" data-tema="playstation">PS3</button>
+                        <button class="btn-filtro-consola" data-consola="xboxsx" data-tema="xbox">Xbox SX</button>
+                        <button class="btn-filtro-consola" data-consola="xboxone" data-tema="xboxone">Xbox One</button>
+                        <button class="btn-filtro-consola" data-consola="xbox360" data-tema="xbox360">Xbox 360</button>
+                        <button class="btn-filtro-consola" data-consola="switch" data-tema="switch">Switch</button>
+                    </div>
+                </div>
+
+                <div class="contenedor-scroll-vista" id="contenedor-plataformas-consolas">
+                    <div class="bloque-plataforma item-consola" data-consola="ps5" data-plataforma="playstation" data-nombre="PlayStation 5" data-precio="15">
+                        <div class="cabecera-acordeon">
+                            <div class="info-cabecera-consola">
+                                <h3>PlayStation 5 (10 Estaciones)</h3>
+                                <span class="tarifa-tag">15 Bs/h | 4K 120Hz</span>
+                            </div>
+                            <button class="accordion-btn abierto" data-detalle="PlayStation 5">[-]</button>
+                        </div>
+                        <div class="accordion-panel panel-visible">
+                            <div class="grilla-estaciones-compacta" data-generar-consola="ps5" data-prefijo="PS5" data-precio="15"></div>
+                        </div>
+                    </div>
+
+                    <div class="bloque-plataforma item-consola" data-consola="ps4" data-plataforma="playstation" data-nombre="PlayStation 4" data-precio="12">
+                        <div class="cabecera-acordeon">
+                            <div class="info-cabecera-consola">
+                                <h3>PlayStation 4 Pro (10 Estaciones)</h3>
+                                <span class="tarifa-tag">12 Bs/h | Full HD</span>
+                            </div>
+                            <button class="accordion-btn abierto" data-detalle="PlayStation 4">[-]</button>
+                        </div>
+                        <div class="accordion-panel panel-visible">
+                            <div class="grilla-estaciones-compacta" data-generar-consola="ps4" data-prefijo="PS4" data-precio="12"></div>
+                        </div>
+                    </div>
+
+                    <div class="bloque-plataforma item-consola" data-consola="ps3" data-plataforma="playstation" data-nombre="PlayStation 3" data-precio="10">
+                        <div class="cabecera-acordeon">
+                            <div class="info-cabecera-consola">
+                                <h3>PlayStation 3 (10 Estaciones)</h3>
+                                <span class="tarifa-tag">10 Bs/h | Clasicos</span>
+                            </div>
+                            <button class="accordion-btn abierto" data-detalle="PlayStation 3">[-]</button>
+                        </div>
+                        <div class="accordion-panel panel-visible">
+                            <div class="grilla-estaciones-compacta" data-generar-consola="ps3" data-prefijo="PS3" data-precio="10"></div>
+                        </div>
+                    </div>
+
+                    <div class="bloque-plataforma item-consola" data-consola="xboxsx" data-plataforma="xbox" data-nombre="Xbox Series X" data-precio="15">
+                        <div class="cabecera-acordeon">
+                            <div class="info-cabecera-consola">
+                                <h3>Xbox Series X (10 Estaciones)</h3>
+                                <span class="tarifa-tag">15 Bs/h | Game Pass</span>
+                            </div>
+                            <button class="accordion-btn abierto" data-detalle="Xbox Series X">[-]</button>
+                        </div>
+                        <div class="accordion-panel panel-visible">
+                            <div class="grilla-estaciones-compacta" data-generar-consola="xboxsx" data-prefijo="XBSX" data-precio="15"></div>
+                        </div>
+                    </div>
+
+                    <div class="bloque-plataforma item-consola" data-consola="xboxone" data-plataforma="xboxone" data-nombre="Xbox One" data-precio="13">
+                        <div class="cabecera-acordeon">
+                            <div class="info-cabecera-consola">
+                                <h3>Xbox One (10 Estaciones)</h3>
+                                <span class="tarifa-tag">13 Bs/h</span>
+                            </div>
+                            <button class="accordion-btn abierto" data-detalle="Xbox One">[-]</button>
+                        </div>
+                        <div class="accordion-panel panel-visible">
+                            <div class="grilla-estaciones-compacta" data-generar-consola="xboxone" data-prefijo="XBONE" data-precio="13"></div>
+                        </div>
+                    </div>
+
+                    <div class="bloque-plataforma item-consola" data-consola="xbox360" data-plataforma="xbox360" data-nombre="Xbox 360" data-precio="10">
+                        <div class="cabecera-acordeon">
+                            <div class="info-cabecera-consola">
+                                <h3>Xbox 360 (10 Estaciones)</h3>
+                                <span class="tarifa-tag">10 Bs/h</span>
+                            </div>
+                            <button class="accordion-btn abierto" data-detalle="Xbox 360">[-]</button>
+                        </div>
+                        <div class="accordion-panel panel-visible">
+                            <div class="grilla-estaciones-compacta" data-generar-consola="xbox360" data-prefijo="XB360" data-precio="10"></div>
+                        </div>
+                    </div>
+
+                    <div class="bloque-plataforma item-consola" data-consola="switch" data-plataforma="switch" data-nombre="Nintendo Switch" data-precio="15">
+                        <div class="cabecera-acordeon">
+                            <div class="info-cabecera-consola">
+                                <h3>Nintendo Switch (10 Estaciones)</h3>
+                                <span class="tarifa-tag">15 Bs/h | Joy-Con</span>
+                            </div>
+                            <button class="accordion-btn abierto" data-detalle="Nintendo Switch">[-]</button>
+                        </div>
+                        <div class="accordion-panel panel-visible">
+                            <div class="grilla-estaciones-compacta" data-generar-consola="switch" data-prefijo="NSW" data-precio="15"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="vista-pcs" class="vista-hud">
+                <div class="barra-vista-interna">
+                    <div class="vista-interna-header">
+                        <button class="btn-volver" data-accion="Volver al Lobby">&lt; Lobby</button>
+                        <h2 class="titulo-vista">ZONA PC GAMER</h2>
+                    </div>
+                    <div class="filtros-pcs">
+                        <button class="btn-filtro-pc activo" data-gama="todas">Todas</button>
+                        <button class="btn-filtro-pc" data-gama="ultra">Ultra (25 Bs/h)</button>
+                        <button class="btn-filtro-pc" data-gama="alta">Alta (20 Bs/h)</button>
+                        <button class="btn-filtro-pc" data-gama="media">Media (15 Bs/h)</button>
+                    </div>
+                </div>
+
+                <div class="contenedor-scroll-vista">
+                    <div class="bloque-plataforma" data-plataforma="pc">
+                        <div class="cabecera-acordeon">
+                            <div>
+                                <h3>Escuadron 20 PCs Gamer RTX</h3>
+                                <span class="tarifa-tag">Perifericos mecanicos incluidos</span>
+                            </div>
+                            <button class="accordion-btn abierto" data-detalle="Zona PC Gamer">[-]</button>
+                        </div>
+                        <div class="accordion-panel panel-visible">
+                            <div class="grilla-estaciones-compacta" id="grilla-20-pcs"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="vista-arcades" class="vista-hud">
+                <div class="barra-vista-interna">
+                    <div class="vista-interna-header">
+                        <button class="btn-volver" data-accion="Volver al Lobby">&lt; Lobby</button>
+                        <h2 class="titulo-vista">ARCADE RETRO</h2>
+                    </div>
+                </div>
+
+                <div class="contenedor-scroll-vista">
+                    <div class="bloque-plataforma" data-plataforma="arcade">
+                        <div class="cabecera-acordeon">
+                            <div>
+                                <h3>25 Maquinas Arcade</h3>
+                                <span class="tarifa-tag">10 Bs/h o 2 Bs/ficha</span>
+                            </div>
+                            <button class="accordion-btn abierto" data-detalle="25 Maquinas Arcade">[-]</button>
+                        </div>
+                        <div class="accordion-panel panel-visible">
+                            <div class="grilla-estaciones-compacta" id="grilla-25-arcades"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Semana 2 - Fetch Lazy Loading y Srcset -->
+            <section id="vista-snacks" class="vista-hud">
+                <div class="barra-vista-interna">
+                    <div class="vista-interna-header">
+                        <button class="btn-volver" data-accion="Volver al Lobby">&lt; Lobby</button>
+                        <h2 class="titulo-vista">SNACKS &amp; COMBOS</h2>
+                    </div>
+                    <!-- Semana 1 - Filtro de Catalogo por Dataset -->
+                    <div class="filtros-snacks">
+                        <button class="btn-filtro-snack activo" data-categoria="todos">Todos</button>
+                        <button class="btn-filtro-snack" data-categoria="comida">Comida</button>
+                        <button class="btn-filtro-snack" data-categoria="bebida">Bebidas</button>
+                        <button class="btn-filtro-snack" data-categoria="combo">Combos</button>
+                    </div>
+                </div>
+
+                <div class="contenedor-scroll-vista">
+                    <div class="grilla-snacks"></div>
+                </div>
+            </section>
+
+            <!-- Semana 2 - Panel Encargado y Stock -->
+            <section id="vista-encargado" class="vista-hud">
+                <div class="barra-vista-interna">
+                    <div class="vista-interna-header">
+                        <button class="btn-volver" data-accion="Volver al Lobby">&lt; Lobby</button>
+                        <h2 class="titulo-vista">GESTION DE STAFF</h2>
+                    </div>
+                </div>
+
+                <div class="contenedor-scroll-vista">
+                    <div class="panel-hud bloque-staff-independiente">
+                        <h3 class="titulo-panel">AGREGAR PRODUCTO AL CATALOGO</h3>
+                        <form id="form-nuevo-snack" class="form-vertical-apilado">
+                            <label for="nuevo-snack-nombre">Nombre del Producto:</label>
+                            <input type="text" id="nuevo-snack-nombre" placeholder="Ej. Hot Dog Supreme">
+
+                            <label for="nuevo-snack-categoria">Categoria:</label>
+                            <select id="nuevo-snack-categoria">
+                                <option value="comida">Comida</option>
+                                <option value="bebida">Bebida</option>
+                                <option value="combo">Combo</option>
+                            </select>
+
+                            <label for="nuevo-snack-precio">Precio (Bs):</label>
+                            <input type="number" id="nuevo-snack-precio" value="18" min="5" max="200">
+
+                            <label for="nuevo-snack-desc">Descripcion:</label>
+                            <input type="text" id="nuevo-snack-desc" placeholder="Ingredientes o detalles">
+
+                            <button type="submit" class="btn-primario-bloque">Agregar Producto en Vivo</button>
+                        </form>
+                    </div>
+
+                    <div class="panel-hud bloque-staff-independiente">
+                        <h3 class="titulo-panel">BANDEJA DE RESERVAS PENDIENTES</h3>
+                        <ul id="lista-reservas-encargado" class="lista-gestion">
+                            <li class="item-gestion vacio-gestion">Sin reservas pendientes.</li>
+                        </ul>
+                    </div>
+
+                    <div class="panel-hud bloque-staff-independiente">
+                        <h3 class="titulo-panel">CONSULTAS DE CLIENTES</h3>
+                        <ul id="lista-consultas-encargado" class="lista-gestion">
+                            <li class="item-gestion vacio-gestion">Sin consultas nuevas.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Semana 1 - Bitacora de Eventos DOM -->
+            <section id="vista-bitacora" class="vista-hud">
+                <div class="barra-vista-interna">
+                    <div class="vista-interna-header">
+                        <button class="btn-volver" data-accion="Volver al Lobby">&lt; Lobby</button>
+                        <h2 class="titulo-vista">CONTROL TOTAL (ADMIN)</h2>
+                    </div>
+                </div>
+
+                <div class="contenedor-scroll-vista">
+                    <div class="admin-modulos-stack">
+                        <div class="tarjeta-colapsable-admin panel-hud">
+                            <button type="button" class="btn-toggle-admin-card abierto" data-panel="admin-panel-metricas">
+                                <span>METRICAS DE EVENTOS</span>
+                                <span class="estado-toggle">Ocultar [-]</span>
+                            </button>
+                            <div id="admin-panel-metricas" class="admin-card-body">
+                                <div id="metricas-admin" class="metricas-grid-admin">
+                                    <div class="tarjeta-metrica-admin"><span>EVENTOS</span><strong id="metrica-eventos">0</strong></div>
+                                    <div class="tarjeta-metrica-admin"><span>RESERVAS</span><strong id="metrica-reservas">0</strong></div>
+                                    <div class="tarjeta-metrica-admin"><span>LIKES</span><strong id="metrica-likes">0</strong></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tarjeta-colapsable-admin panel-hud">
+                            <button type="button" class="btn-toggle-admin-card abierto" data-panel="admin-panel-fifo">
+                                <span>COLA OFFLINE-FIRST FIFO</span>
+                                <span class="estado-toggle">Ocultar [-]</span>
+                            </button>
+                            <!-- Semana 2 - Cola Offline-First FIFO -->
+                            <div id="admin-panel-fifo" class="admin-card-body">
+                                <div class="barra-estado-fifo">
+                                    <span>Red: <strong id="admin-estado-red">ONLINE</strong></span>
+                                    <span>Pendientes: <strong id="metrica-cola">0</strong></span>
+                                </div>
+                                <ul id="lista-cola-fifo-admin" class="lista-gestion">
+                                    <li class="item-gestion vacio-gestion">Sin pedidos pendientes en cola FIFO.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="tarjeta-colapsable-admin panel-hud">
+                            <button type="button" class="btn-toggle-admin-card abierto" data-panel="admin-panel-auditoria">
+                                <span>AUDITORIA DOM</span>
+                                <span class="estado-toggle">Ocultar [-]</span>
+                            </button>
+                            <div id="admin-panel-auditoria" class="admin-card-body">
+                                <div class="cabecera-panel-der">
+                                    <span class="info-bitacora">Registro sanitizado con .text()</span>
+                                    <button type="button" id="btn-limpiar-log" data-accion="Limpiar Bitacora">Purgar</button>
+                                </div>
+                                <div id="log-output" class="consola-eventos"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Semana 2 - Navegacion Nativa Android PWA -->
+        <nav class="pwa-bottom-bar">
+            <button class="bottom-tab btn-nav-hud tab-tactil activo" data-vista="vista-lobby" data-tema="" data-titulo="Lobby">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                <span>Lobby</span>
+            </button>
+            <button class="bottom-tab btn-nav-hud tab-tactil" data-vista="vista-consolas" data-consola="todos" data-tema="playstation" data-titulo="Consolas">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="6" y1="12" x2="10" y2="12"></line>
+                    <line x1="8" y1="10" x2="8" y2="14"></line>
+                    <circle cx="15" cy="11" r="1"></circle>
+                    <circle cx="18" cy="13" r="1"></circle>
+                    <rect x="2" y="6" width="20" height="12" rx="6"></rect>
+                </svg>
+                <span>Consolas</span>
+            </button>
+            <button class="bottom-tab btn-nav-hud tab-tactil" data-vista="vista-pcs" data-tema="pc" data-titulo="PCs RTX">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+                    <line x1="8" y1="21" x2="16" y2="21"></line>
+                    <line x1="12" y1="17" x2="12" y2="21"></line>
+                </svg>
+                <span>PCs</span>
+            </button>
+            <button class="bottom-tab btn-nav-hud tab-tactil" data-vista="vista-arcades" data-tema="arcade" data-titulo="Arcades">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M6 3h12l3 7v11H3V10l3-7z"></path>
+                    <circle cx="10" cy="14" r="2"></circle>
+                    <circle cx="15" cy="12" r="1"></circle>
+                    <circle cx="17" cy="14" r="1"></circle>
+                </svg>
+                <span>Arcades</span>
+            </button>
+            <button class="bottom-tab btn-nav-hud tab-tactil" data-vista="vista-snacks" data-tema="comida" data-titulo="Snacks">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+                    <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+                    <line x1="6" y1="1" x2="6" y2="4"></line>
+                    <line x1="10" y1="1" x2="10" y2="4"></line>
+                    <line x1="14" y1="1" x2="14" y2="4"></line>
+                </svg>
+                <span>Snacks</span>
+            </button>
+        </nav>
+
+        <!-- Semana 2 - Modal Checkout Temporizador 30s -->
+        <div id="modal-confirmacion">
+            <div class="modal-contenido">
+                <div class="modal-header">
+                    <h2>CHECKOUT</h2>
+                    <div class="caja-timer">
+                        <span>EXPIRA:</span>
+                        <strong id="timer-modal">00:30</strong>
+                    </div>
+                </div>
+
+                <div class="modal-body">
+                    <ul id="modal-resumen-lista"></ul>
+                    <div class="modal-total-box">
+                        <span>Total:</span>
+                        <strong><span id="modal-total">0</span> Bs</strong>
+                    </div>
+
+                    <form id="form-checkout" class="form-vertical-apilado">
+                        <label for="input-nombre-cliente">Nombre del Jugador / Cliente:</label>
+                        <input type="text" id="input-nombre-cliente" placeholder="Ej. Alex Mercer" required>
+
+                        <label for="select-modalidad">Modalidad:</label>
+                        <select id="select-modalidad">
+                            <option value="Reserva para llegar al local">Reserva para llegar al local</option>
+                            <option value="Pedido directo a mi estacion actual">Pedido a mi estacion actual</option>
+                        </select>
+
+                        <label for="forma-pago">Forma de Pago:</label>
+                        <select id="forma-pago">
+                            <option value="Efectivo (Pago en Local)">Efectivo (Pago en Local)</option>
+                            <option value="Pago QR (Simple / Transferencia Movil)">Pago QR</option>
+                            <option value="Transferencia Bancaria">Transferencia Bancaria</option>
+                        </select>
+
+                        <div id="modal-error" class="msg-error"></div>
+
+                        <div class="modal-acciones">
+                            <button type="submit" id="btn-confirmar-pago">Confirmar Pedido</button>
+                            <button type="button" id="btn-cerrar-modal" data-accion="Cancelar Modal">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- Semana 3 - Componentes Encapsulados -->
+    <script src="tarjeta.js"></script>
+    <!-- Semana 3 - Mobile-First Grid y Flexbox -->
+    <script src="layout.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>

@@ -1,3 +1,4 @@
+/* Semana 1 - Modo Oscuro Base */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -30,6 +31,7 @@ body.bg-comida {
     background: radial-gradient(circle at top, #5c2805 0%, #140804 100%);
 }
 
+/* Semana 1 - Modo Claro */
 body.modo-claro {
     background: #eef4fa;
     color: #0f172a;
@@ -77,6 +79,7 @@ body.modo-claro .enlace-nav {
     color: #0f172a;
 }
 
+/* Semana 1 - Menu Hamburguesa */
 .btn-hamburguesa {
     display: none;
     flex-direction: column;
@@ -213,6 +216,7 @@ body.modo-claro #buscador-vivo {
     border-color: #cbd5e1;
 }
 
+/* Semana 1 - Filtro de Catalogo */
 .barra-filtros {
     display: flex;
     flex-wrap: wrap;
@@ -239,6 +243,7 @@ body.modo-claro .bloque-plataforma {
     border-color: #cbd5e1;
 }
 
+/* Semana 2 - Acordeon Animado */
 .accordion-btn {
     width: 100%;
     text-align: left;
@@ -305,6 +310,7 @@ body.modo-claro .bloque-bitacora {
     margin-bottom: 10px;
 }
 
+/* Semana 1 - Bitacora de Eventos DOM */
 .consola-eventos {
     min-height: 180px;
     max-height: 240px;
@@ -322,6 +328,7 @@ body.modo-claro .bloque-bitacora {
     margin-bottom: 5px;
 }
 
+/* Semana 1 - Alertas Arriba a la Derecha */
 .alerta-bloque-top {
     display: none;
     position: absolute;
@@ -381,6 +388,7 @@ body.modo-claro #form-consulta input {
     font-weight: 600;
 }
 
+/* Semana 2 - Responsividad Critica Landscape */
 @media (orientation: landscape) and (max-height: 500px) {
     .barra-superior {
         padding: 8px 14px;

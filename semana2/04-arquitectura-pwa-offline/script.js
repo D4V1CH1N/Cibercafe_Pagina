@@ -1,3 +1,4 @@
+// Semana 1 - Inicializacion DOM y Eventos
 $(document).ready(function () {
     var totalOrden = 0;
     var contadorLikes = 0;
@@ -26,6 +27,7 @@ $(document).ready(function () {
         }
     };
 
+    // Semana 1 - Bitacora Dia 1 Registro DOM
     function registrarBitacora(tipoEvento, detalleEvento) {
         var horaTexto = new Date().toLocaleTimeString();
         var $linea = $('<div>').addClass('linea-log').text('[' + horaTexto + '] [' + tipoEvento + '] ' + detalleEvento);
@@ -61,6 +63,7 @@ $(document).ready(function () {
         }
     }
 
+    // Semana 2 - Arquitectura PWA Offline-First FIFO
     function sincronizarColaFIFO() {
         var colaPendiente = obtenerColaOffline();
         if (colaPendiente.length === 0) {
@@ -68,11 +71,13 @@ $(document).ready(function () {
         }
         var sincronizados = 0;
         while (colaPendiente.length > 0) {
-            var registroExtraido = colaPendiente.shift();
+            const registroActual = colaPendiente.shift();
+            const nombreTitular = registroActual.cliente || registroActual.nombre;
+            const importeTotal = registroActual.montoTotal || registroActual.total;
             sincronizados += 1;
-            registrarBitacora('SYNC FIFO', 'Enviado pedido de ' + registroExtraido.nombre + ' (' + registroExtraido.total + ' Bs)');
+            registrarBitacora('SYNC FIFO', 'Enviado pedido de ' + nombreTitular + ' (' + importeTotal + ' Bs)');
         }
-        localStorage.setItem('colaSincronizacionCiber', JSON.stringify(colaPendiente));
+        localStorage.removeItem('colaSincronizacionCiber');
         mostrarToast('CONEXION RESTAURADA', 'Se sincronizaron ' + sincronizados + ' registros pendientes.', false);
     }
 
@@ -94,6 +99,7 @@ $(document).ready(function () {
         return subtotalCalculado;
     }
 
+    // Semana 2 - Fetch Lazy Loading y Respaldo SVG
     function cargarSnacksFetch() {
         fetch('data/snacks.json')
             .then(function (respuestaServidor) {
@@ -106,23 +112,36 @@ $(document).ready(function () {
                 var $grillaSnacks = $('.grilla-snacks');
                 $grillaSnacks.empty();
 
+                var svgRespaldoSnack = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180"><rect width="320" height="180" rx="14" fill="#080d1a"/><circle cx="160" cy="82" r="34" fill="#ffcc00" opacity="0.22"/><rect x="112" y="64" width="96" height="22" rx="11" fill="#ffcc00"/><rect x="108" y="92" width="104" height="14" rx="7" fill="#00ff88"/><rect x="114" y="112" width="92" height="16" rx="8" fill="#00c8ff"/></svg>');
+
                 $.each(datosSnacks, function (indiceSnack, snackItem) {
-                    var $tarjeta = $('<div>').addClass('card-snack card').attr({
+                    var $tarjeta = $('<article>').addClass('card-snack card').attr({
                         'data-categoria': 'snack',
-                        'data-titulo': snackItem.nombre
+                        'data-titulo': snackItem.nombre || ''
                     });
-                    var rutaImagen = snackItem.imagen;
-                    var htmlImagen = `<img src="${rutaImagen}" srcset="${rutaImagen} 150w, ${rutaImagen} 600w, ${rutaImagen} 1080w" sizes="(max-width: 600px) 150px, 600px" loading="lazy" alt="${snackItem.nombre}" width="120" height="120" class="img-snack-dinamica">`;
-                    var $tag = $('<span>').addClass('tag-snack').text(String(snackItem.categoria).toUpperCase());
-                    var $titulo = $('<h4>').text(snackItem.nombre);
+                    var rutaImagen = snackItem.imagen || svgRespaldoSnack;
+                    var $imagenSnack = $('<img>').addClass('img-snack-dinamica').attr({
+                        src: rutaImagen,
+                        srcset: rutaImagen + ' 150w, ' + rutaImagen + ' 600w, ' + rutaImagen + ' 1080w',
+                        sizes: '(max-width: 600px) 150px, 600px',
+                        loading: 'lazy',
+                        alt: snackItem.nombre || 'Snack LevelUp',
+                        width: '120',
+                        height: '120'
+                    }).on('error', function () {
+                        if ($(this).attr('data-fallback-aplicado')) return;
+                        $(this).attr('data-fallback-aplicado', '1').attr('src', svgRespaldoSnack).attr('srcset', svgRespaldoSnack + ' 150w');
+                    });
+                    var $tag = $('<span>').addClass('tag-snack').text(String(snackItem.categoria || '').toUpperCase());
+                    var $titulo = $('<h4>').text(snackItem.nombre || '');
                     var $desc = $('<p>').text(snackItem.descripcion || '');
-                    var $precio = $('<div>').addClass('precio-snack').text(snackItem.precio + ' Bs');
-                    var $boton = $('<button>').addClass('btn-pedir-snack').attr({
-                        'data-nombre': snackItem.nombre,
-                        'data-precio': snackItem.precio
+                    var $precio = $('<div>').addClass('precio-snack').text((snackItem.precio || 0) + ' Bs');
+                    var $boton = $('<button>').attr('type', 'button').addClass('btn-pedir-snack').attr({
+                        'data-nombre': snackItem.nombre || '',
+                        'data-precio': snackItem.precio || 0
                     }).text('Agregar al Pedido');
 
-                    $tarjeta.append($tag, $(htmlImagen), $titulo, $desc, $precio, $boton);
+                    $tarjeta.append($tag, $imagenSnack, $titulo, $desc, $precio, $boton);
                     $grillaSnacks.append($tarjeta);
                 });
                 registrarBitacora('FETCH ASYNC', 'Snacks cargados (' + datosSnacks.length + ')');
@@ -132,6 +151,7 @@ $(document).ready(function () {
             });
     }
 
+    // Semana 1 - Modo Oscuro y Claro
     $(document).off('click', '#btn-tema').on('click', '#btn-tema', function () {
         $('body').toggleClass('modo-claro');
     });
@@ -170,6 +190,7 @@ $(document).ready(function () {
         $('#nav-menu').removeClass('show');
     });
 
+    // Semana 2 - Acordeon Animado jQuery
     $(document).off('click', '.accordion-btn').on('click', '.accordion-btn', function () {
         var temaAsociado = $(this).data('tema');
         $('body').removeClass(clasesFondo);
@@ -179,6 +200,7 @@ $(document).ready(function () {
         $(this).next('.accordion-panel').slideToggle('fast');
     });
 
+    // Semana 1 - Bitacora Dia 2 Evento Change
     $(document).off('change', '.select-variante').on('change', '.select-variante', function () {
         var $tarjeta = $(this).closest('.bloque-plataforma');
         var precioElegido = parseInt($(this).val(), 10) || 0;
@@ -210,6 +232,7 @@ $(document).ready(function () {
         mostrarToast('CALCULO AGREGADO', 'Sesion calculada por ' + montoCalculado + ' Bs', false);
     });
 
+    // Semana 2 - Filtro de 3 Capas
     $(document).off('change', '#capa1').on('change', '#capa1', function () {
         var zonaSeleccionada = $(this).val();
         var $capa2 = $('#capa2');
@@ -255,6 +278,7 @@ $(document).ready(function () {
         }
     });
 
+    // Semana 2 - Calculador Modal 30s y Checkout
     $(document).off('click', '#btn-abrir-modal').on('click', '#btn-abrir-modal', function () {
         if (totalOrden <= 0) {
             mostrarToast('CARRITO VACIO', 'Agrega un servicio o snack antes de confirmar.', true);
@@ -293,11 +317,12 @@ $(document).ready(function () {
         if (!navigator.onLine) {
             var colaOffline = obtenerColaOffline();
             colaOffline.push({
-                nombre: nombreJugador,
+                cliente: nombreJugador,
                 modalidad: modalidadElegida,
                 formaPago: formaPagoElegida,
-                total: totalOrden,
-                items: itemsOrden.slice()
+                montoTotal: totalOrden,
+                items: itemsOrden.slice(),
+                fechaHora: new Date().toISOString()
             });
             localStorage.setItem('colaSincronizacionCiber', JSON.stringify(colaOffline));
             $('#form-checkout')[0].reset();
@@ -322,11 +347,13 @@ $(document).ready(function () {
         $('#contador-likes').text(contadorLikes);
     });
 
+    // Semana 1 - Bitacora Dia 1 Bubbling Dblclick
     $(document).off('dblclick', '.card').on('dblclick', '.card', function () {
         contadorLikes += 2;
         $('#contador-likes').text(contadorLikes);
     });
 
+    // Semana 1 - Bitacora Dia 1 Keyup Buscador
     $(document).off('keyup', '#buscador-vivo').on('keyup', '#buscador-vivo', function () {
         var consulta = $(this).val().trim().toLowerCase();
         $('.card').each(function () {
@@ -339,6 +366,7 @@ $(document).ready(function () {
         });
     });
 
+    // Semana 1 - Validacion Formulario con Regex
     $(document).off('submit', '#form-consulta').on('submit', '#form-consulta', function (eventoFormulario) {
         eventoFormulario.preventDefault();
         var valorNombre = $('#campo-nombre').val().trim();
@@ -365,6 +393,7 @@ $(document).ready(function () {
         $('#log-output').empty();
     });
 
+    // Semana 2 - Sincronizacion Offline FIFO
     $(window).off('online offline').on('online offline', function () {
         actualizarEstadoRed();
         if (navigator.onLine) {

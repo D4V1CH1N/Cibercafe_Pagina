@@ -1,4 +1,10 @@
+// Semana 1 - Inicializacion DOM y Eventos
 $(document).ready(function () {
+
+    // Semana 3 - Bloqueo de Aviso Instalar PWA
+    window.addEventListener('beforeinstallprompt', function (eventoInstalacion) {
+        eventoInstalacion.preventDefault();
+    });
 
     var totalPagar = 0;
     var totalItems = 0;
@@ -10,6 +16,11 @@ $(document).ready(function () {
     var segundosPromo10m = 600;
     var promoExpirada = false;
     var promoReclamada = false;
+    var promocionActivaActual = null;
+    var intervaloAutoAdmin = null;
+    var listaActividadCache = [];
+    var sincronizacionFifoActiva = false;
+    var temporizadorBusquedaRadar = null;
     var listaSnacksGlobal = [];
     var reservasActivas = [];
     var consultasActivas = [];
@@ -103,10 +114,22 @@ $(document).ready(function () {
     function obtenerColaSincronizacion() {
         try {
             var cadenaGuardada = localStorage.getItem('colaSincronizacionCiber');
-            return cadenaGuardada ? JSON.parse(cadenaGuardada) : [];
+            var colaParseada = cadenaGuardada ? JSON.parse(cadenaGuardada) : [];
+            return Array.isArray(colaParseada) ? colaParseada : [];
         } catch (errorLectura) {
             return [];
         }
+    }
+
+    function encolarOperacionOfflineFIFO(tipoOperacion, datosPayload) {
+        var colaActual = obtenerColaSincronizacion();
+        colaActual.push({
+            tipo: tipoOperacion,
+            payload: datosPayload,
+            fechaHora: new Date().toISOString()
+        });
+        localStorage.setItem('colaSincronizacionCiber', JSON.stringify(colaActual));
+        actualizarMetricasAdmin();
     }
 
     function actualizarMetricasAdmin() {
@@ -120,18 +143,33 @@ $(document).ready(function () {
         var $listaFifo = $('#lista-cola-fifo-admin');
         $listaFifo.empty();
         if (colaPendiente.length === 0) {
-            $listaFifo.append($('<li>').addClass('item-gestion vacio-gestion').text('Sin pedidos pendientes en cola FIFO.'));
+            $listaFifo.append($('<li>').addClass('item-gestion vacio-gestion').text('Sin operaciones pendientes en cola FIFO.'));
         } else {
             for (var indiceCola = 0; indiceCola < colaPendiente.length; indiceCola++) {
                 var registroCola = colaPendiente[indiceCola];
+                var tipoNodo = registroCola.tipo || 'pedido';
+                var cuerpoNodo = registroCola.payload || registroCola;
+                var resumenLinea = '';
+                if (tipoNodo === 'pedido') {
+                    resumenLinea = 'Cliente: ' + (cuerpoNodo.nombre || cuerpoNodo.cliente || 'Invitado') + ' | Total: ' + (cuerpoNodo.total || cuerpoNodo.montoTotal || 0) + ' Bs';
+                } else if (tipoNodo === 'reserva') {
+                    resumenLinea = 'Reserva: ' + (cuerpoNodo.cliente || 'Cliente') + ' - ' + (cuerpoNodo.sala || '');
+                } else if (tipoNodo === 'promocion') {
+                    resumenLinea = 'Promocion Express: ' + (cuerpoNodo.titulo || 'Oferta');
+                } else if (tipoNodo === 'actividad') {
+                    resumenLinea = 'Actividad: ' + (cuerpoNodo.cliente || 'Cliente') + ' -> ' + (cuerpoNodo.accion || '');
+                } else {
+                    resumenLinea = 'Operacion ' + tipoNodo.toUpperCase() + ' pendiente';
+                }
                 var $filaCola = $('<li>').addClass('item-gestion');
-                $filaCola.append($('<strong>').text('Cliente: ' + (registroCola.nombre || registroCola.cliente || 'Invitado')));
-                $filaCola.append($('<span>').text('Total: ' + (registroCola.total || registroCola.montoTotal || 0) + ' Bs | Pago: ' + (registroCola.formaPago || 'N/A')));
+                $filaCola.append($('<strong>').text('[' + tipoNodo.toUpperCase() + '] ' + resumenLinea));
+                $filaCola.append($('<span>').text('Registrado: ' + (registroCola.fechaHora || 'Pendiente')));
                 $listaFifo.append($filaCola);
             }
         }
     }
 
+    // Semana 1 - Bitacora Dia 1 Registro DOM
     function registrarEvento(tipoEvento, descripcionMensaje) {
         contadorEventosSistema += 1;
         var horaTexto = obtenerHoraActual();
@@ -172,35 +210,59 @@ $(document).ready(function () {
         actualizarMetricasAdmin();
     }
 
+    // Semana 2 - Login y Control de 3 Roles
+    function detenerAutoRefreshAdmin() {
+        if (intervaloAutoAdmin !== null) {
+            clearInterval(intervaloAutoAdmin);
+            intervaloAutoAdmin = null;
+        }
+    }
+
+    function iniciarAutoRefreshAdmin() {
+        detenerAutoRefreshAdmin();
+        intervaloAutoAdmin = setInterval(function () {
+            if (navigator.onLine && sesionActual && sesionActual.rol === 'admin') {
+                cargarPanelAdminEjecutivo();
+            }
+        }, 15000);
+    }
+
     function aplicarPermisosRol(rolActivo, nombreUsuario) {
+        $('body').removeClass('rol-cliente rol-encargado rol-admin').addClass('rol-' + rolActivo);
         $('.permiso-encargado, .permiso-admin').hide();
         $('#hud-jugador').text(nombreUsuario + ' (' + rolActivo.toUpperCase() + ')');
 
         if (rolActivo === 'encargado') {
+            detenerAutoRefreshAdmin();
             $('.permiso-encargado').show();
+            cambiarVistaHUD('vista-encargado', '', 'Reservas');
         } else if (rolActivo === 'admin') {
             $('.permiso-encargado, .permiso-admin').show();
+            cambiarVistaHUD('vista-bitacora', '', 'Actividad');
+            iniciarAutoRefreshAdmin();
+        } else {
+            detenerAutoRefreshAdmin();
+            $('.pwa-bottom-bar .solo-cliente, .pwa-side-rail .solo-cliente').css('display', '');
+            cambiarVistaHUD('vista-lobby', '', 'Lobby');
+            cargarPromocionCliente();
         }
-
-        $('.vista-hud').removeClass('vista-activa').hide();
-        $('#vista-lobby').addClass('vista-activa').css('display', 'flex');
-        $('.tab-tactil, .tab-rol').removeClass('activo');
-        $('.tab-tactil[data-vista="vista-lobby"], .tab-rol[data-vista="vista-lobby"]').addClass('activo');
+        sincronizarEstadoEstaciones();
     }
 
     function verificarSesionInicial() {
+        localStorage.removeItem('sesionRolLevelUp');
         try {
-            var sesionGuardada = localStorage.getItem('sesionRolLevelUp');
+            var sesionGuardada = sessionStorage.getItem('sesionRolLevelUp');
             if (sesionGuardada) {
                 sesionActual = JSON.parse(sesionGuardada);
                 if (sesionActual && sesionActual.usuario && sesionActual.rol) {
                     aplicarPermisosRol(sesionActual.rol, sesionActual.usuario);
-                    $('#pantalla-login').hide();
+                    $('#pantalla-login').stop(true, true).hide();
                     return;
                 }
             }
         } catch (errorSesion) {
-            localStorage.removeItem('sesionRolLevelUp');
+            sessionStorage.removeItem('sesionRolLevelUp');
         }
         aplicarPermisosRol('cliente', 'Invitado');
         $('#pantalla-login').css('display', 'flex');
@@ -216,6 +278,163 @@ $(document).ready(function () {
         return arregloOpciones;
     }
 
+    // Semana 3 - Backend Supabase Estaciones
+    function obtenerOcupacionLocalEstaciones() {
+        try {
+            var mapaRaw = localStorage.getItem('estacionesOcupadasLevelUp');
+            var mapa = mapaRaw ? JSON.parse(mapaRaw) : {};
+            return (mapa && typeof mapa === 'object') ? mapa : {};
+        } catch (errorMapa) {
+            return {};
+        }
+    }
+
+    function guardarOcupacionLocalEstacion(codigoEstacion, clienteNombre, detalleTexto, idReserva) {
+        var mapaActual = obtenerOcupacionLocalEstaciones();
+        mapaActual[codigoEstacion] = {
+            id: idReserva || (mapaActual[codigoEstacion] && mapaActual[codigoEstacion].id) || '',
+            cliente: clienteNombre || 'Cliente',
+            detalle: detalleTexto || 'Reserva activa',
+            estado: 'ocupado'
+        };
+        localStorage.setItem('estacionesOcupadasLevelUp', JSON.stringify(mapaActual));
+    }
+
+    function eliminarOcupacionLocalEstacion(codigoEstacion) {
+        var mapaActual = obtenerOcupacionLocalEstaciones();
+        if (Object.prototype.hasOwnProperty.call(mapaActual, codigoEstacion)) {
+            delete mapaActual[codigoEstacion];
+            localStorage.setItem('estacionesOcupadasLevelUp', JSON.stringify(mapaActual));
+        }
+    }
+
+    function restaurarEstacionDisponible($tarjeta) {
+        var badgeDefault = $tarjeta.attr('data-badge-libre') || 'Libre';
+        var textoBtnDefault = $tarjeta.attr('data-texto-btn') || 'Reservar';
+        $tarjeta.removeClass('estado-uso estado-reservado').addClass('estado-disponible');
+        $tarjeta.find('.badge-estado').text(badgeDefault);
+        $tarjeta.find('.info-reserva-activa, .btn-liberar-estacion').remove();
+        $tarjeta.find('.select-juego-estacion, .est-controles, .select-horas-estacion, .select-modo-arcade').show();
+        $tarjeta.find('select, input').prop('disabled', false);
+        $tarjeta.find('.btn-reservar-est, .btn-reservar-arcade')
+            .prop('disabled', false)
+            .removeClass('btn-estacion-ocupada')
+            .text(textoBtnDefault);
+    }
+
+    function aplicarEstadoOcupadoEstacion($tarjeta, infoReserva, rolUsuario) {
+        var codigoEst = $tarjeta.attr('data-estacion-id') || $tarjeta.attr('data-codigo');
+        $tarjeta.removeClass('estado-disponible estado-reservado').addClass('estado-uso');
+        $tarjeta.find('.badge-estado').text('RESERVADA');
+        $tarjeta.find('.select-juego-estacion, .est-controles, .select-horas-estacion, .select-modo-arcade').hide();
+        $tarjeta.find('.info-reserva-activa, .btn-liberar-estacion').remove();
+
+        var $infoBox = $('<div>').addClass('info-reserva-activa');
+        $infoBox.append(
+            $('<strong>').text('Reservada por: ' + (infoReserva.cliente || 'Cliente')),
+            $('<small>').text(infoReserva.detalle || 'Estacion en uso')
+        );
+
+        var $btnReserva = $tarjeta.find('.btn-reservar-est, .btn-reservar-arcade');
+        $btnReserva.prop('disabled', true).addClass('btn-estacion-ocupada').text('Estacion Ocupada').before($infoBox);
+
+        if (rolUsuario === 'encargado' || rolUsuario === 'admin') {
+            var $btnLiberar = $('<button>')
+                .attr('type', 'button')
+                .addClass('btn-liberar-estacion')
+                .attr('data-reserva-id', infoReserva.id || '')
+                .attr('data-estacion-id', codigoEst)
+                .text('Liberar Estacion');
+            $btnReserva.after($btnLiberar);
+        }
+    }
+
+    async function sincronizarEstadoEstaciones() {
+        var mapaOcupadas = {};
+        if (navigator.onLine && typeof obtenerEstacionesOcupadasNube === 'function') {
+            var resOcupadas = await obtenerEstacionesOcupadasNube();
+            if (resOcupadas.ok) {
+                var mapaNube = {};
+                for (var idxOcupada = 0; idxOcupada < resOcupadas.registros.length; idxOcupada++) {
+                    var filaOcupada = resOcupadas.registros[idxOcupada];
+                    var partesDetalle = String(filaOcupada.detalle_sala || '').split('|');
+                    var codigoParsed = partesDetalle[0] ? partesDetalle[0].trim() : '';
+                    if (codigoParsed) {
+                        var textoDetalle = partesDetalle.slice(1).join('|').trim() || 'Reserva activa';
+                        mapaNube[codigoParsed] = {
+                            id: filaOcupada.id || '',
+                            cliente: filaOcupada.cliente || 'Cliente',
+                            detalle: textoDetalle,
+                            estado: 'ocupado'
+                        };
+                    }
+                }
+                mapaOcupadas = Object.assign({}, obtenerOcupacionLocalEstaciones(), mapaNube);
+                localStorage.setItem('estacionesOcupadasLevelUp', JSON.stringify(mapaOcupadas));
+            } else {
+                mapaOcupadas = obtenerOcupacionLocalEstaciones();
+            }
+        } else {
+            mapaOcupadas = obtenerOcupacionLocalEstaciones();
+        }
+
+        var colaPendLista = obtenerColaSincronizacion();
+        for (var idxCola = 0; idxCola < colaPendLista.length; idxCola++) {
+            var regCola = colaPendLista[idxCola];
+            var datosReg = regCola.payload || regCola;
+            var estacionesPend = Array.isArray(datosReg.estaciones) ? datosReg.estaciones : [];
+            for (var idxEstPend = 0; idxEstPend < estacionesPend.length; idxEstPend++) {
+                var estPend = estacionesPend[idxEstPend];
+                if (estPend && estPend.codigo) {
+                    mapaOcupadas[estPend.codigo] = {
+                        id: '',
+                        cliente: datosReg.cliente || 'Cliente',
+                        detalle: estPend.detalle || 'Pendiente de sincronizar',
+                        estado: 'ocupado'
+                    };
+                }
+            }
+        }
+
+        var rolActual = (sesionActual && sesionActual.rol) ? sesionActual.rol : 'cliente';
+        $('.estacion[data-estacion-id]').each(function () {
+            var $tarjetaEstacion = $(this);
+            var codigoEst = $tarjetaEstacion.attr('data-estacion-id');
+            if (mapaOcupadas[codigoEst]) {
+                aplicarEstadoOcupadoEstacion($tarjetaEstacion, mapaOcupadas[codigoEst], rolActual);
+            } else {
+                restaurarEstacionDisponible($tarjetaEstacion);
+            }
+        });
+
+        renderizarEstacionesOcupadasStaff(mapaOcupadas);
+    }
+
+    function renderizarEstacionesOcupadasStaff(mapaOcupadas) {
+        var $listaEstStaff = $('#lista-estaciones-ocupadas-staff');
+        if ($listaEstStaff.length === 0) return;
+        $listaEstStaff.empty();
+        var codigos = Object.keys(mapaOcupadas || {});
+        if (codigos.length === 0) {
+            $listaEstStaff.append($('<li>').addClass('item-gestion vacio-gestion').text('Todas las estaciones disponibles.'));
+            return;
+        }
+        for (var idxCod = 0; idxCod < codigos.length; idxCod++) {
+            var codigoEst = codigos[idxCod];
+            var infoEst = mapaOcupadas[codigoEst];
+            var $filaEst = $('<li>').addClass('item-gestion');
+            $filaEst.append(
+                $('<strong>').text(codigoEst + ' - ' + (infoEst.cliente || 'Cliente')),
+                $('<span>').text(infoEst.detalle || 'Estacion en uso'),
+                $('<button>')
+                    .attr({ type: 'button', 'data-reserva-id': infoEst.id || '', 'data-estacion-id': codigoEst })
+                    .addClass('btn-liberar-estacion')
+                    .text('Liberar')
+            );
+            $listaEstStaff.append($filaEst);
+        }
+    }
+
     function inicializarEstacionesConsolas() {
         $('.grilla-estaciones-compacta[data-generar-consola]').each(function () {
             var $grillaActual = $(this);
@@ -227,52 +446,46 @@ $(document).ready(function () {
             for (var numeroEstacion = 1; numeroEstacion <= 10; numeroEstacion++) {
                 var numeroFormateado = numeroEstacion < 10 ? '0' + numeroEstacion : '' + numeroEstacion;
                 var codigoEstacion = prefijoEstacion + '-' + numeroFormateado;
-                var $tarjetaEstacion = $('<div>').addClass('estacion').attr({
+                var textoBtnConsola = 'Reservar (' + precioHora + ' Bs/h)';
+                var $tarjetaEstacion = $('<div>').addClass('estacion card-item estado-disponible').attr({
                     'data-tipo': 'consola',
                     'data-codigo': codigoEstacion,
-                    'data-precio': precioHora
+                    'data-estacion-id': codigoEstacion,
+                    'data-precio': precioHora,
+                    'data-badge-libre': 'Libre',
+                    'data-texto-btn': textoBtnConsola
                 });
-                var $filaSuperior = $('<div>').addClass('est-top');
-                var $tituloEstacion = $('<h4>').text(codigoEstacion);
+                var $cuerpo = $('<div>').addClass('card-item__cuerpo');
+                var $filaSuperior = $('<div>').addClass('est-top').append($('<h4>').text(codigoEstacion), $('<span>').addClass('badge-estado').text('Libre'));
 
-                if (numeroEstacion === 3 || numeroEstacion === 8) {
-                    $tarjetaEstacion.addClass('estado-uso');
-                    $filaSuperior.append($tituloEstacion, $('<span>').addClass('badge-estado').text('En Uso'));
-                    $tarjetaEstacion.append($filaSuperior);
-                } else if (numeroEstacion === 6) {
-                    $tarjetaEstacion.addClass('estado-reservado');
-                    $filaSuperior.append($tituloEstacion, $('<span>').addClass('badge-estado').text('Reservado'));
-                    $tarjetaEstacion.append($filaSuperior);
-                } else {
-                    $tarjetaEstacion.addClass('estado-disponible');
-                    $filaSuperior.append($tituloEstacion, $('<span>').addClass('badge-estado').text('Libre'));
-
-                    var $selectJuego = $('<select>').addClass('select-juego-estacion');
-                    var opcionesJuego = construirOpcionesJuegos(claveConsola);
-                    for (var indiceOpc = 0; indiceOpc < opcionesJuego.length; indiceOpc++) {
-                        $selectJuego.append(opcionesJuego[indiceOpc]);
-                    }
-
-                    var $filaControles = $('<div>').addClass('est-controles');
-                    var $selectControles = $('<select>').addClass('select-cant-controles');
-                    for (var cantControles = 1; cantControles <= 4; cantControles++) {
-                        var textoControl = cantControles + (cantControles === 1 ? ' Ctrl' : ' Ctrls');
-                        if (cantControles >= 3) {
-                            textoControl += ' (+' + ((cantControles - 2) * 3) + ')';
-                        }
-                        $selectControles.append($('<option>').attr('value', cantControles).text(textoControl));
-                    }
-
-                    var $selectHoras = $('<select>').addClass('select-horas-estacion');
-                    $selectHoras.append($('<option>').attr('value', '1').text('1h'));
-                    $selectHoras.append($('<option>').attr('value', '2').text('2h'));
-                    $selectHoras.append($('<option>').attr('value', '3').text('3h'));
-                    $selectHoras.append($('<option>').attr('value', '4').text('4h'));
-                    $filaControles.append($selectControles, $selectHoras);
-
-                    var $botonReservar = $('<button>').addClass('btn-reservar-est').text('Reservar (' + precioHora + ' Bs/h)');
-                    $tarjetaEstacion.append($filaSuperior, $selectJuego, $filaControles, $botonReservar);
+                var $selectJuego = $('<select>').addClass('select-juego-estacion');
+                var opcionesJuego = construirOpcionesJuegos(claveConsola);
+                for (var indiceOpc = 0; indiceOpc < opcionesJuego.length; indiceOpc++) {
+                    $selectJuego.append(opcionesJuego[indiceOpc]);
                 }
+
+                var $filaControles = $('<div>').addClass('est-controles');
+                var $selectControles = $('<select>').addClass('select-cant-controles');
+                for (var cantControles = 1; cantControles <= 4; cantControles++) {
+                    var textoControl = cantControles + (cantControles === 1 ? ' Ctrl' : ' Ctrls');
+                    if (cantControles >= 3) {
+                        textoControl += ' (+' + ((cantControles - 2) * 3) + ')';
+                    }
+                    $selectControles.append($('<option>').attr('value', cantControles).text(textoControl));
+                }
+
+                var $selectHoras = $('<select>').addClass('select-horas-estacion');
+                $selectHoras.append(
+                    $('<option>').attr('value', '1').text('1h'),
+                    $('<option>').attr('value', '2').text('2h'),
+                    $('<option>').attr('value', '3').text('3h'),
+                    $('<option>').attr('value', '4').text('4h')
+                );
+                $filaControles.append($selectControles, $selectHoras);
+
+                var $botonReservar = $('<button>').attr('type', 'button').addClass('btn-reservar-est').text(textoBtnConsola);
+                $cuerpo.append($filaSuperior, $selectJuego, $filaControles, $botonReservar);
+                $tarjetaEstacion.append($cuerpo);
                 $grillaActual.append($tarjetaEstacion);
             }
         });
@@ -299,36 +512,36 @@ $(document).ready(function () {
                 specPC = 'RTX 4070 | 165Hz';
             }
 
-            var $tarjetaPC = $('<div>').addClass('estacion').attr({
+            var textoBtnPC = 'Ocupar (' + precioPC + ' Bs/h)';
+            var badgePC = gamaPC.toUpperCase();
+            var $tarjetaPC = $('<div>').addClass('estacion card-item estado-disponible').attr({
                 'data-tipo': 'pc',
                 'data-gama': gamaPC,
                 'data-codigo': codigoPC,
-                'data-precio': precioPC
+                'data-estacion-id': codigoPC,
+                'data-precio': precioPC,
+                'data-badge-libre': badgePC,
+                'data-texto-btn': textoBtnPC
             });
-            var $topPC = $('<div>').addClass('est-top').append($('<h4>').text(codigoPC));
+            var $cuerpoPC = $('<div>').addClass('card-item__cuerpo');
+            var $topPC = $('<div>').addClass('est-top').append($('<h4>').text(codigoPC), $('<span>').addClass('badge-estado').text(badgePC));
 
-            if (numeroPC === 2 || numeroPC === 9 || numeroPC === 17) {
-                $tarjetaPC.addClass('estado-uso');
-                $topPC.append($('<span>').addClass('badge-estado').text('En Uso'));
-                $tarjetaPC.append($topPC, $('<small>').text(specPC));
-            } else {
-                $tarjetaPC.addClass('estado-disponible');
-                $topPC.append($('<span>').addClass('badge-estado').text(gamaPC.toUpperCase()));
-
-                var $selectJuegoPC = $('<select>').addClass('select-juego-estacion');
-                for (var idxJuegoPC = 0; idxJuegoPC < listaJuegosPC.length; idxJuegoPC++) {
-                    $selectJuegoPC.append($('<option>').attr('value', listaJuegosPC[idxJuegoPC]).text(listaJuegosPC[idxJuegoPC]));
-                }
-
-                var $selectHorasPC = $('<select>').addClass('select-horas-estacion');
-                $selectHorasPC.append($('<option>').attr('value', '1').text('1 Hora (' + precioPC + ' Bs)'));
-                $selectHorasPC.append($('<option>').attr('value', '2').text('2 Horas (' + (precioPC * 2) + ' Bs)'));
-                $selectHorasPC.append($('<option>').attr('value', '3').text('3 Horas (' + (precioPC * 3) + ' Bs)'));
-                $selectHorasPC.append($('<option>').attr('value', '5').text('5 Horas (' + (precioPC * 5) + ' Bs)'));
-
-                var $botonPC = $('<button>').addClass('btn-reservar-est').text('Ocupar (' + precioPC + ' Bs/h)');
-                $tarjetaPC.append($topPC, $('<small>').text(specPC), $selectJuegoPC, $selectHorasPC, $botonPC);
+            var $selectJuegoPC = $('<select>').addClass('select-juego-estacion');
+            for (var idxJuegoPC = 0; idxJuegoPC < listaJuegosPC.length; idxJuegoPC++) {
+                $selectJuegoPC.append($('<option>').attr('value', listaJuegosPC[idxJuegoPC]).text(listaJuegosPC[idxJuegoPC]));
             }
+
+            var $selectHorasPC = $('<select>').addClass('select-horas-estacion');
+            $selectHorasPC.append(
+                $('<option>').attr('value', '1').text('1 Hora (' + precioPC + ' Bs)'),
+                $('<option>').attr('value', '2').text('2 Horas (' + (precioPC * 2) + ' Bs)'),
+                $('<option>').attr('value', '3').text('3 Horas (' + (precioPC * 3) + ' Bs)'),
+                $('<option>').attr('value', '5').text('5 Horas (' + (precioPC * 5) + ' Bs)')
+            );
+
+            var $botonPC = $('<button>').attr('type', 'button').addClass('btn-reservar-est').text(textoBtnPC);
+            $cuerpoPC.append($topPC, $('<small>').text(specPC), $selectJuegoPC, $selectHorasPC, $botonPC);
+            $tarjetaPC.append($cuerpoPC);
             $grillaPC.append($tarjetaPC);
         }
     }
@@ -342,65 +555,170 @@ $(document).ready(function () {
             var codigoArcade = numArc < 10 ? 'ARC-0' + numArc : 'ARC-' + numArc;
             var tituloJuegoArcade = lista25Arcades[idxArc];
 
-            var $tarjetaArc = $('<div>').addClass('estacion').attr({
+            var $tarjetaArc = $('<div>').addClass('estacion card-item estado-disponible').attr({
                 'data-tipo': 'arcade',
                 'data-codigo': codigoArcade,
-                'data-juego': tituloJuegoArcade
+                'data-estacion-id': codigoArcade,
+                'data-juego': tituloJuegoArcade,
+                'data-badge-libre': 'Libre',
+                'data-texto-btn': 'Reservar Arcade'
             });
-            var $topArc = $('<div>').addClass('est-top').append($('<h4>').text(codigoArcade));
+            var $cuerpoArc = $('<div>').addClass('card-item__cuerpo');
+            var $topArc = $('<div>').addClass('est-top').append($('<h4>').text(codigoArcade), $('<span>').addClass('badge-estado').text('Libre'));
 
-            if (numArc === 5 || numArc === 18) {
-                $tarjetaArc.addClass('estado-uso');
-                $topArc.append($('<span>').addClass('badge-estado').text('En Uso'));
-                $tarjetaArc.append($topArc, $('<small>').text(tituloJuegoArcade));
-            } else {
-                $tarjetaArc.addClass('estado-disponible');
-                $topArc.append($('<span>').addClass('badge-estado').text('Libre'));
+            var $selectModalidadArc = $('<select>').addClass('select-modo-arcade').append(
+                $('<option>').attr({ value: 'hora', 'data-precio': '10' }).text('Por Hora (10 Bs)'),
+                $('<option>').attr({ value: 'fichas5', 'data-precio': '10' }).text('5 Fichas (10 Bs)'),
+                $('<option>').attr({ value: 'fichas1', 'data-precio': '2' }).text('1 Ficha (2 Bs)')
+            );
 
-                var $selectModalidadArc = $('<select>').addClass('select-modo-arcade');
-                $selectModalidadArc.append($('<option>').attr({ value: 'hora', 'data-precio': '10' }).text('Por Hora (10 Bs)'));
-                $selectModalidadArc.append($('<option>').attr({ value: 'fichas5', 'data-precio': '10' }).text('5 Fichas (10 Bs)'));
-                $selectModalidadArc.append($('<option>').attr({ value: 'fichas1', 'data-precio': '2' }).text('1 Ficha (2 Bs)'));
-
-                var $botonArc = $('<button>').addClass('btn-reservar-arcade').text('Reservar Arcade');
-                $tarjetaArc.append($topArc, $('<small>').text(tituloJuegoArcade), $selectModalidadArc, $botonArc);
-            }
+            var $botonArc = $('<button>').attr('type', 'button').addClass('btn-reservar-arcade').text('Reservar Arcade');
+            $cuerpoArc.append($topArc, $('<small>').text(tituloJuegoArcade), $selectModalidadArc, $botonArc);
+            $tarjetaArc.append($cuerpoArc);
             $grillaArcade.append($tarjetaArc);
         }
     }
 
+    // Semana 3 - Sanitizacion DOMPurify y Anti-XSS
+    function renderizarContenidoSeguro(selectorContenedor, htmlDinamico) {
+        var htmlLimpio = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(htmlDinamico) : '';
+        if (htmlLimpio) {
+            $(selectorContenedor).html(htmlLimpio);
+        } else {
+            $(selectorContenedor).text('');
+        }
+    }
+
     function renderizarTarjetasSnacks(listaProductos) {
-        var $contenedorSnacks = $('.grilla-snacks');
-        $contenedorSnacks.empty();
-
+        var contenedorSnacks = $('.grilla-snacks');
+        var svgRespaldoSnack = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 180'%3E%3Crect width='320' height='180' rx='12' fill='%2312172a'/%3E%3Crect x='110' y='52' width='100' height='76' rx='16' fill='none' stroke='%2300f3ff' stroke-width='4'/%3E%3Ccircle cx='160' cy='90' r='18' fill='none' stroke='%23ff00ea' stroke-width='4'/%3E%3Ctext x='160' y='155' text-anchor='middle' fill='%2300f3ff' font-family='sans-serif' font-size='14'%3ESNACK LEVELUP%3C/text%3E%3C/svg%3E";
+        contenedorSnacks.empty();
         $.each(listaProductos, function (indiceSnack, snackItem) {
-            var $tarjetaSnack = $('<div>').addClass('card-snack').attr({
-                'data-categoria': snackItem.categoria,
-                'data-nombre': snackItem.nombre,
-                'data-precio': snackItem.precio
-            });
+            var nombreSnack = String(snackItem.nombre || '');
+            var categoriaSnack = String(snackItem.categoria || '');
+            var descripcionSnack = String(snackItem.descripcion || '');
+            var precioSnack = Number(snackItem.precio || 0);
+            var rutaImagen = String(snackItem.imagen || 'icons/icon-192.png');
 
-            var $tagCategoria = $('<span>').addClass('tag-snack').text(String(snackItem.categoria).toUpperCase());
-            var rutaImagen = snackItem.imagen || '';
-            var $imagenSnack = $('<img>').addClass('img-snack-dinamica').attr({
-                src: rutaImagen,
-                srcset: rutaImagen + ' 150w, ' + rutaImagen + ' 600w, ' + rutaImagen + ' 1080w',
-                sizes: '(max-width: 600px) 150px, 600px',
-                loading: 'lazy',
-                alt: snackItem.nombre || 'Snack LevelUp',
-                width: '120',
-                height: '120'
-            });
-            var $tituloSnack = $('<h4>').text(snackItem.nombre);
-            var $descSnack = $('<p>').text(snackItem.descripcion || '');
-            var $precioSnack = $('<div>').addClass('precio-snack').text(snackItem.precio + ' Bs');
-            var $botonSnack = $('<button>').addClass('btn-pedir-snack').text('Agregar al Pedido');
+            var tarjetaArticulo = $('<article>')
+                .addClass('card-snack card-item')
+                .attr('data-categoria', categoriaSnack)
+                .attr('data-nombre', nombreSnack)
+                .attr('data-precio', precioSnack);
 
-            $tarjetaSnack.append($tagCategoria, $imagenSnack, $tituloSnack, $descSnack, $precioSnack, $botonSnack);
-            $contenedorSnacks.append($tarjetaSnack);
+            var cuerpoTarjeta = $('<div>').addClass('card-item__cuerpo');
+            var etiquetaCategoria = $('<span>')
+                .addClass('tag-snack card-item__etiqueta')
+                .text(categoriaSnack.toUpperCase());
+
+            var imagenSnack = $('<img>')
+                .addClass('img-snack-dinamica card-item__imagen')
+                .attr('src', rutaImagen)
+                .attr('srcset', rutaImagen + ' 150w, ' + rutaImagen + ' 600w, ' + rutaImagen + ' 1080w')
+                .attr('sizes', '(max-width: 600px) 150px, 600px')
+                .attr('loading', 'lazy')
+                .attr('alt', nombreSnack || 'Snack LevelUp')
+                .attr('width', '320')
+                .attr('height', '180')
+                .on('error', function () {
+                    var nodoImagen = $(this);
+                    if (nodoImagen.attr('data-fallback-aplicado') === '1') {
+                        return;
+                    }
+                    nodoImagen
+                        .attr('data-fallback-aplicado', '1')
+                        .attr('srcset', svgRespaldoSnack)
+                        .attr('src', svgRespaldoSnack);
+                });
+
+            var tituloSnack = $('<h4>').addClass('card-item__titulo').text(nombreSnack);
+            var textoDescripcion = $('<p>').addClass('card-item__descripcion').text(descripcionSnack);
+            var bloquePrecio = $('<div>').addClass('precio-snack card-item__precio').text(precioSnack + ' Bs');
+            var botonAgregar = $('<button>')
+                .attr('type', 'button')
+                .addClass('btn-pedir-snack')
+                .text('Agregar al Pedido');
+
+            cuerpoTarjeta.append(etiquetaCategoria, imagenSnack, tituloSnack, textoDescripcion, bloquePrecio, botonAgregar);
+            tarjetaArticulo.append(cuerpoTarjeta);
+            contenedorSnacks.append(tarjetaArticulo);
         });
     }
 
+    function agregarConsultaPanelEncargadoDOM(nombreRemitente, correoRemitente, textoConsulta) {
+        var $listaConsultas = $('#lista-consultas-encargado');
+        if ($listaConsultas.find('.vacio-gestion').length > 0) {
+            $listaConsultas.empty();
+        }
+        var $itemConsulta = $('<li>').addClass('item-gestion');
+        var tituloRemitente = correoRemitente ? (nombreRemitente + ' (' + correoRemitente + ')') : nombreRemitente;
+        var $autorTexto = $('<strong>').text(tituloRemitente);
+        var $mensajeTexto = $('<p>').text(textoConsulta);
+        var $cajaRespuesta = $('<div>').addClass('respuesta-encargado-box');
+        var $inputRespuesta = $('<input>').attr('type', 'text').attr('placeholder', 'Escribir respuesta al cliente...').addClass('input-respuesta-encargado');
+        var $botonResponder = $('<button>').attr('type', 'button').addClass('btn-responder-consulta').text('Enviar Respuesta');
+        var $salidaRespuesta = $('<span>').addClass('texto-respuesta-emitida');
+        $cajaRespuesta.append($inputRespuesta, $botonResponder, $salidaRespuesta);
+        $itemConsulta.append($autorTexto, $mensajeTexto, $cajaRespuesta);
+        $listaConsultas.prepend($itemConsulta);
+    }
+
+    // Semana 3 - Backend Supabase
+    async function cargarDatosInicialesNube() {
+        if (!navigator.onLine || typeof listarRegistrosProyecto !== 'function') {
+            return;
+        }
+        var resReservas = await listarRegistrosProyecto('reservas');
+        if (resReservas.ok && resReservas.registros.length > 0) {
+            for (var idxReserva = resReservas.registros.length - 1; idxReserva >= 0; idxReserva--) {
+                var filaReserva = resReservas.registros[idxReserva];
+                var $itemRes = $('<li>').addClass('item-reserva');
+                $itemRes.append(
+                    $('<strong>').text((filaReserva.cliente || 'Cliente') + ' - '),
+                    $('<span>').text(filaReserva.detalle_sala || '')
+                );
+                $('#listaReservas').prepend($itemRes);
+            }
+        }
+
+        var resPedidos = await listarRegistrosProyecto('pedidos');
+        if (resPedidos.ok && resPedidos.registros.length > 0) {
+            for (var idxPedido = resPedidos.registros.length - 1; idxPedido >= 0; idxPedido--) {
+                var filaPedido = resPedidos.registros[idxPedido];
+                agregarReservaParaEncargado(
+                    filaPedido.cliente || 'Cliente',
+                    filaPedido.modalidad || 'Reserva',
+                    Number(filaPedido.monto_total || 0),
+                    Array.isArray(filaPedido.items) ? filaPedido.items : []
+                );
+            }
+        }
+
+        var resConsultas = await listarRegistrosProyecto('consultas');
+        if (resConsultas.ok && resConsultas.registros.length > 0) {
+            for (var idxConsulta = resConsultas.registros.length - 1; idxConsulta >= 0; idxConsulta--) {
+                var filaConsulta = resConsultas.registros[idxConsulta];
+                agregarConsultaPanelEncargadoDOM(filaConsulta.cliente || 'Cliente', '', filaConsulta.mensaje || '');
+            }
+        }
+
+        var resProductos = await listarRegistrosProyecto('productos_extra');
+        if (resProductos.ok && resProductos.registros.length > 0) {
+            for (var idxProd = 0; idxProd < resProductos.registros.length; idxProd++) {
+                var filaProd = resProductos.registros[idxProd];
+                listaSnacksGlobal.unshift({
+                    nombre: filaProd.nombre || 'Producto Nube',
+                    categoria: filaProd.categoria || 'combo',
+                    precio: Number(filaProd.precio || 15),
+                    descripcion: 'Producto sincronizado desde Supabase.',
+                    imagen: filaProd.imagen || 'icons/icon-192.png'
+                });
+            }
+            renderizarTarjetasSnacks(listaSnacksGlobal);
+        }
+    }
+
+    // Semana 2 - Fetch Lazy Loading y Respaldo SVG
     function cargarCatalogoSnacks() {
         fetch('../data/snacks.json')
             .then(function (respuestaServidor) {
@@ -412,6 +730,7 @@ $(document).ready(function () {
             .then(function (datosSnacks) {
                 listaSnacksGlobal = datosSnacks;
                 renderizarTarjetasSnacks(listaSnacksGlobal);
+                cargarDatosInicialesNube();
                 registrarEvento('FETCH ASYNC', 'Catalogo de ' + listaSnacksGlobal.length + ' snacks cargado con Lazy Loading');
             })
             .catch(function (errorCarga) {
@@ -435,23 +754,36 @@ $(document).ready(function () {
     }
 
     function cambiarVistaHUD(idVista, temaAsociado, tituloZona) {
-        if (idVista === 'vista-encargado' && (!sesionActual || (sesionActual.rol !== 'encargado' && sesionActual.rol !== 'admin'))) {
+        var rolUsuario = (sesionActual && sesionActual.rol) ? sesionActual.rol : 'cliente';
+        var vistasGestion = ['vista-encargado', 'vista-pedidos-gestion', 'vista-promos', 'vista-catalogo-gestion'];
+
+        if (vistasGestion.indexOf(idVista) !== -1 && rolUsuario === 'cliente') {
             mostrarToast('ACCESO RESTRINGIDO', 'Vista exclusiva para Encargado o Administrador.', true);
             return;
         }
-        if (idVista === 'vista-bitacora' && (!sesionActual || sesionActual.rol !== 'admin')) {
-            mostrarToast('ACCESO RESTRINGIDO', 'Bitacora exclusiva para Administrador.', true);
+        if (idVista === 'vista-bitacora' && rolUsuario !== 'admin') {
+            mostrarToast('ACCESO RESTRINGIDO', 'Control Total exclusivo para Administrador.', true);
             return;
         }
 
-        $('.vista-hud').removeClass('vista-activa').hide();
-        $('#' + idVista).addClass('vista-activa').css('display', 'flex');
+        $('.vista-hud').removeClass('vista-activa').css('display', '');
+        $('#' + idVista).addClass('vista-activa').css('display', '');
         $('.tab-tactil, .tab-rol').removeClass('activo');
         $('.tab-tactil[data-vista="' + idVista + '"], .tab-rol[data-vista="' + idVista + '"]').addClass('activo');
 
         if (idVista === 'vista-bitacora') {
             actualizarMetricasAdmin();
+            cargarPanelAdminEjecutivo();
+        } else if (idVista === 'vista-encargado') {
+            cargarReservasStaff();
+        } else if (idVista === 'vista-pedidos-gestion') {
+            cargarPedidosGestion();
+        } else if (idVista === 'vista-promos') {
+            cargarPromocionCliente();
+        } else if (idVista === 'vista-catalogo-gestion') {
+            cargarDatosInicialesNube();
         }
+
         if (temaAsociado !== undefined) {
             actualizarFondoHUD(temaAsociado);
         }
@@ -464,7 +796,271 @@ $(document).ready(function () {
         registrarEvento('NAVEGACION HUD', 'Vista activa: ' + (tituloZona || idVista));
     }
 
-    function agregarItemCarrito(nombreProducto, precioUnitario, cantidadItems) {
+    // Semana 3 - Promociones Express Gestionables
+    function obtenerPromocionLocalRespaldo() {
+        try {
+            var promoRaw = localStorage.getItem('promocionActivaLevelUp');
+            if (promoRaw) {
+                var parsed = JSON.parse(promoRaw);
+                if (parsed && parsed.titulo) return parsed;
+            }
+        } catch (errorPromo) {
+        }
+        return {
+            titulo: 'PS5 (2h + 4 Controles) + Pizza Familiar',
+            descripcion: 'Disfruta PlayStation 5 para 4 jugadores con Pizza Familiar recien horneada.',
+            precio: 45,
+            texto_boton: 'Reclamar Promo (45 Bs)',
+            activa: true,
+            expira_en: new Date(Date.now() + 600000).toISOString()
+        };
+    }
+
+    function guardarPromocionLocalRespaldo(datosPromo) {
+        localStorage.setItem('promocionActivaLevelUp', JSON.stringify(datosPromo));
+    }
+
+    function actualizarVistaPromoCliente(datosPromo) {
+        promocionActivaActual = datosPromo;
+        var tituloPromo = String(datosPromo.titulo || 'Promocion LevelUp');
+        var descPromo = String(datosPromo.descripcion || 'Promocion especial en barra gamer.');
+        var precioPromo = parseInt(datosPromo.precio, 10) || 45;
+        var botonPromo = String(datosPromo.texto_boton || ('Reclamar Promo (' + precioPromo + ' Bs)'));
+        var promoActivaFlag = datosPromo.activa !== false;
+
+        $('#promo-lobby-titulo').text(tituloPromo);
+        $('#promo-lobby-desc').text(descPromo);
+        if (!promoReclamada) {
+            $('#btn-reclamar-promo').attr({ 'data-nombre': tituloPromo, 'data-precio': precioPromo }).text(botonPromo);
+        }
+
+        $('#promo-preview-badge').text(promoActivaFlag ? 'ACTIVA EN LOBBY' : 'PAUSADA POR STAFF');
+        $('#promo-preview-titulo').text(tituloPromo);
+        $('#promo-preview-desc').text(descPromo);
+        $('#promo-preview-precio').text('Precio: ' + precioPromo + ' Bs');
+
+        if ($('#promo-edit-titulo').length > 0 && !$('#promo-edit-titulo').is(':focus')) {
+            $('#promo-edit-titulo').val(tituloPromo);
+            $('#promo-edit-desc').val(descPromo);
+            $('#promo-edit-precio').val(precioPromo);
+            $('#promo-edit-boton').val(botonPromo);
+            $('#promo-edit-estado').val(promoActivaFlag ? 'activa' : 'pausada');
+        }
+
+        iniciarRelojPromoDinamico(datosPromo.expira_en, promoActivaFlag);
+    }
+
+    function iniciarRelojPromoDinamico(fechaExpiraIso, promoActivaFlag) {
+        if (intervaloPromo10m !== null) {
+            clearInterval(intervaloPromo10m);
+            intervaloPromo10m = null;
+        }
+        var expiraMs = fechaExpiraIso ? new Date(fechaExpiraIso).getTime() : (Date.now() + 600000);
+        if (isNaN(expiraMs)) expiraMs = Date.now() + 600000;
+
+        function actualizarTickPromo() {
+            if (!promoActivaFlag) {
+                segundosPromo10m = 0;
+                promoExpirada = true;
+                $('#timer-oferta-10m').text('PAUSADA');
+                $('#estado-promo-badge').text('OFERTA PAUSADA');
+                $('#promo-preview-expira').text('Estado: Pausada');
+                $('#btn-reclamar-promo').hide();
+                return false;
+            }
+            segundosPromo10m = Math.max(0, Math.floor((expiraMs - Date.now()) / 1000));
+            var min = Math.floor(segundosPromo10m / 60);
+            var seg = segundosPromo10m % 60;
+            var textoClock = (min < 10 ? '0' + min : min) + ':' + (seg < 10 ? '0' + seg : seg);
+
+            if (segundosPromo10m > 0) {
+                promoExpirada = false;
+                $('#timer-oferta-10m').text(textoClock);
+                $('#estado-promo-badge').text('OFERTA RELAMPAGO');
+                $('#promo-preview-expira').text('Expira en: ' + textoClock);
+                $('#btn-reclamar-promo').show();
+                return true;
+            } else {
+                promoExpirada = true;
+                $('#timer-oferta-10m').text('00:00');
+                $('#estado-promo-badge').text('OFERTA EXPIRADA');
+                $('#promo-preview-expira').text('Estado: Expirada');
+                $('#btn-reclamar-promo').hide();
+                return false;
+            }
+        }
+
+        if (actualizarTickPromo()) {
+            intervaloPromo10m = setInterval(function () {
+                if (!actualizarTickPromo()) {
+                    clearInterval(intervaloPromo10m);
+                    intervaloPromo10m = null;
+                    registrarEvento('SISTEMA OFERTA', 'La promocion express expiro.');
+                }
+            }, 1000);
+        }
+    }
+
+    async function cargarPromocionCliente() {
+        var promoElegida = obtenerPromocionLocalRespaldo();
+        if (navigator.onLine && typeof obtenerPromocionActivaNube === 'function') {
+            var resPromo = await obtenerPromocionActivaNube();
+            if (resPromo.ok && resPromo.promocion) {
+                promoElegida = resPromo.promocion;
+                guardarPromocionLocalRespaldo(promoElegida);
+            }
+        }
+        actualizarVistaPromoCliente(promoElegida);
+    }
+
+    // Semana 3 - Monitor en Vivo de Actividad de Clientes
+    async function registrarActividadCliente(tipoAccion, detalleAccion, nombreForzado) {
+        var rolAct = (sesionActual && sesionActual.rol) ? sesionActual.rol : 'cliente';
+        if (!nombreForzado && rolAct !== 'cliente') return;
+        var clienteNombre = nombreForzado || (sesionActual ? sesionActual.usuario : 'Invitado');
+        if (navigator.onLine && typeof registrarActividadClienteNube === 'function') {
+            var resAct = await registrarActividadClienteNube(clienteNombre, tipoAccion, detalleAccion);
+            if (resAct && resAct.ok) return;
+        }
+        encolarOperacionOfflineFIFO('actividad', {
+            cliente: clienteNombre,
+            accion: tipoAccion,
+            detalle: detalleAccion
+        });
+    }
+
+    function renderizarFeedActividadFiltrado() {
+        var $listaFeed = $('#lista-actividad-clientes');
+        if ($listaFeed.length === 0) return;
+        var filtroTipo = $('#filtro-tipo-actividad').val() || 'TODOS';
+        var filtroCliente = ($('#filtro-cliente-actividad').val() || '').toLowerCase().trim();
+        $listaFeed.empty();
+
+        var filtrados = listaActividadCache.filter(function (registroItem) {
+            var coincideTipo = (!filtroTipo || String(filtroTipo).toUpperCase() === 'TODOS') || (String(registroItem.accion || '') === filtroTipo);
+            var nombreCliente = String(registroItem.cliente || '').toLowerCase();
+            var detalleTexto = String(registroItem.detalle || '').toLowerCase();
+            var coincideCliente = !filtroCliente || nombreCliente.indexOf(filtroCliente) !== -1 || detalleTexto.indexOf(filtroCliente) !== -1;
+            return coincideTipo && coincideCliente;
+        });
+
+        if (filtrados.length === 0) {
+            $listaFeed.append($('<li>').addClass('item-gestion vacio-gestion').text('Sin eventos registrados para el filtro seleccionado.'));
+            return;
+        }
+
+        for (var idxAct = 0; idxAct < filtrados.length; idxAct++) {
+            var filaAct = filtrados[idxAct];
+            var fechaFmt = filaAct.creado_en ? new Date(filaAct.creado_en).toLocaleTimeString() : 'Reciente';
+            var $nodoAct = $('<li>').addClass('item-actividad-fila');
+            var $topAct = $('<div>').addClass('actividad-meta-top').append(
+                $('<strong>').text(filaAct.cliente || 'Cliente'),
+                $('<span>').addClass('badge-accion-actividad').text(filaAct.accion || 'EVENTO'),
+                $('<span>').text(fechaFmt)
+            );
+            $nodoAct.append($topAct, $('<span>').text(filaAct.detalle || ''));
+            $listaFeed.append($nodoAct);
+        }
+    }
+
+    async function cargarPanelAdminEjecutivo() {
+        if (!sesionActual || sesionActual.rol !== 'admin' || !navigator.onLine) return;
+
+        var promCuentas = listarRegistrosProyecto('cuentas');
+        var promReservas = listarRegistrosProyecto('reservas');
+        var promPedidos = listarRegistrosProyecto('pedidos');
+        var promActividad = typeof obtenerActividadClientesNube === 'function' ? obtenerActividadClientesNube() : Promise.resolve({ ok: false, registros: [] });
+
+        var resultados = await Promise.all([promCuentas, promReservas, promPedidos, promActividad]);
+        var resCuentas = resultados[0];
+        var resReservas = resultados[1];
+        var resPedidos = resultados[2];
+        var resActividad = resultados[3];
+
+        if (resCuentas.ok) {
+            var clientesSolo = resCuentas.registros.filter(function (cuentaItem) {
+                return (cuentaItem.rol || 'cliente') === 'cliente';
+            });
+            $('#kpi-clientes-total').text(clientesSolo.length);
+        }
+        if (resReservas.ok) {
+            var activasRes = resReservas.registros.filter(function (resItem) {
+                return (resItem.estado || 'activa') !== 'liberada';
+            });
+            $('#kpi-reservas-activas').text(activasRes.length);
+        }
+        if (resPedidos.ok) {
+            var totalIngresos = 0;
+            for (var idxIng = 0; idxIng < resPedidos.registros.length; idxIng++) {
+                totalIngresos += Number(resPedidos.registros[idxIng].monto_total || 0);
+            }
+            $('#kpi-pedidos-total').text(resPedidos.registros.length);
+            $('#kpi-ingresos-total').text(totalIngresos + ' Bs');
+        }
+        if (resActividad.ok) {
+            listaActividadCache = Array.isArray(resActividad.registros) ? resActividad.registros : [];
+            renderizarFeedActividadFiltrado();
+        }
+    }
+
+    async function cargarReservasStaff() {
+        await sincronizarEstadoEstaciones();
+        if (!navigator.onLine || typeof listarRegistrosProyecto !== 'function') return;
+        var resReservas = await listarRegistrosProyecto('reservas');
+        var $listaResStaff = $('#lista-reservas-encargado');
+        if ($listaResStaff.length === 0 || !resReservas.ok) return;
+        $listaResStaff.empty();
+        if (resReservas.registros.length === 0) {
+            $listaResStaff.append($('<li>').addClass('item-gestion vacio-gestion').text('Sin reservas recientes.'));
+            return;
+        }
+        for (var idxResS = 0; idxResS < resReservas.registros.length; idxResS++) {
+            var filaResS = resReservas.registros[idxResS];
+            var $itemResS = $('<li>').addClass('item-gestion');
+            $itemResS.append(
+                $('<strong>').text('Cliente: ' + (filaResS.cliente || 'Cliente')),
+                $('<span>').text(filaResS.detalle_sala || ''),
+                $('<span>').addClass('badge-estado').text('Estado: ' + (filaResS.estado || 'activa'))
+            );
+            $listaResStaff.append($itemResS);
+        }
+    }
+
+    async function cargarPedidosGestion() {
+        if (!navigator.onLine || typeof listarRegistrosProyecto !== 'function') return;
+        var resPedidos = await listarRegistrosProyecto('pedidos');
+        var $listaPed = $('#lista-pedidos-gestion');
+        if ($listaPed.length === 0 || !resPedidos.ok) return;
+        $listaPed.empty();
+        if (resPedidos.registros.length === 0) {
+            $listaPed.append($('<li>').addClass('item-gestion vacio-gestion').text('Sin pedidos registrados en la nube.'));
+            return;
+        }
+        for (var idxPedG = 0; idxPedG < resPedidos.registros.length; idxPedG++) {
+            var filaPedG = resPedidos.registros[idxPedG];
+            var itemsPed = Array.isArray(filaPedG.items) ? filaPedG.items.join(' | ') : '';
+            var estadoPed = String(filaPedG.estado || 'pendiente');
+            var $itemPed = $('<li>').addClass('item-gestion');
+            $itemPed.append(
+                $('<strong>').text((filaPedG.cliente || 'Cliente') + ' - ' + (filaPedG.monto_total || 0) + ' Bs'),
+                $('<span>').text(itemsPed || 'Pedido general'),
+                $('<span>').text((filaPedG.modalidad || 'Local') + ' | ' + (filaPedG.forma_pago || 'Efectivo'))
+            );
+            if (estadoPed === 'entregado') {
+                $itemPed.append($('<span>').addClass('badge-entregado').text('ENTREGADO'));
+            } else {
+                $itemPed.append(
+                    $('<button>')
+                        .attr({ type: 'button', 'data-pedido-id': filaPedG.id || '' })
+                        .addClass('btn-entregar-pedido')
+                        .text('Marcar Entregado')
+                );
+            }
+            $listaPed.append($itemPed);
+        }
+    }
+
+    function agregarItemCarrito(nombreProducto, precioUnitario, cantidadItems, codigoEstacion, detalleEstacion) {
         if ($('#lista-carrito .carrito-vacio').length > 0) {
             $('#lista-carrito').empty();
         }
@@ -475,12 +1071,18 @@ $(document).ready(function () {
             'data-subtotal': subtotalCalculado,
             'data-nombre': nombreProducto
         });
+        if (codigoEstacion) {
+            $itemLista.attr({
+                'data-estacion-id': codigoEstacion,
+                'data-detalle-estacion': detalleEstacion || nombreProducto
+            });
+        }
         var $spanTexto = $('<span>').addClass('item-carrito-txt').text(nombreProducto);
-        var $grupoDerecho = $('<span>');
-        var $strongSubtotal = $('<strong>').text(subtotalCalculado + ' Bs ');
-        var $botonQuitar = $('<button>').addClass('btn-quitar-item').text('X');
+        var $grupoDerecho = $('<div>').addClass('item-carrito-acciones');
+        var $spanSubtotal = $('<span>').addClass('item-carrito-precio').text(subtotalCalculado + ' Bs');
+        var $botonQuitar = $('<button>').attr({ type: 'button', 'aria-label': 'Quitar item' }).addClass('btn-quitar-item').text('X');
 
-        $grupoDerecho.append($strongSubtotal, $botonQuitar);
+        $grupoDerecho.append($spanSubtotal, $botonQuitar);
         $itemLista.append($spanTexto, $grupoDerecho);
         $('#lista-carrito').append($itemLista);
 
@@ -511,76 +1113,258 @@ $(document).ready(function () {
         actualizarMetricasAdmin();
     }
 
-    function iniciarCronometroOferta10Minutos() {
-        clearInterval(intervaloPromo10m);
-        intervaloPromo10m = setInterval(function () {
-            segundosPromo10m--;
-            if (segundosPromo10m <= 0) {
-                clearInterval(intervaloPromo10m);
-                promoExpirada = true;
-                $('#timer-oferta-10m').text('00:00');
-                $('#estado-promo-badge').text('OFERTA EXPIRADA');
-                $('#btn-reclamar-promo').prop('disabled', true).text('OFERTA EXPIRADA');
-                registrarEvento('SISTEMA OFERTA', 'La oferta relampago de 10 minutos expiro.');
-                return;
-            }
-            var minutosTexto = Math.floor(segundosPromo10m / 60);
-            var segundosTexto = segundosPromo10m % 60;
-            $('#timer-oferta-10m').text((minutosTexto < 10 ? '0' + minutosTexto : minutosTexto) + ':' + (segundosTexto < 10 ? '0' + segundosTexto : segundosTexto));
-        }, 1000);
-    }
-
-    function sincronizarColaPendiente() {
+    // Semana 2 - Arquitectura PWA Offline-First FIFO
+    async function sincronizarColaPendiente() {
+        if (sincronizacionFifoActiva || !navigator.onLine) return;
         var colaPendiente = obtenerColaSincronizacion();
-        if (colaPendiente.length === 0) {
-            return;
-        }
+        if (colaPendiente.length === 0) return;
+
+        sincronizacionFifoActiva = true;
         var cantidadSincronizada = 0;
-        while (colaPendiente.length > 0) {
-            var registroExtraido = colaPendiente.shift();
-            cantidadSincronizada++;
-            registrarEvento('SYNC FIFO ONLINE', 'Sincronizado pedido de ' + registroExtraido.nombre + ' (' + registroExtraido.total + ' Bs)');
-            agregarReservaParaEncargado(registroExtraido.nombre, registroExtraido.modalidad, registroExtraido.total, registroExtraido.items);
+
+        try {
+            while (colaPendiente.length > 0 && navigator.onLine) {
+                var registroActual = colaPendiente.shift();
+                var tipoOperacion = registroActual.tipo || 'pedido';
+                var datosOperacion = registroActual.payload || registroActual;
+
+                if (tipoOperacion === 'pedido') {
+                    var nombreTitular = datosOperacion.cliente || datosOperacion.nombre || 'Cliente';
+                    var importeTotal = datosOperacion.montoTotal || datosOperacion.total || 0;
+                    if (typeof guardarPedidoNube === 'function') {
+                        await guardarPedidoNube({
+                            cliente: nombreTitular,
+                            modalidad: datosOperacion.modalidad || 'Reserva',
+                            formaPago: datosOperacion.formaPago || 'Efectivo',
+                            montoTotal: importeTotal,
+                            items: datosOperacion.items || []
+                        });
+                    }
+                    if (Array.isArray(datosOperacion.estaciones) && typeof reservarEstacionNube === 'function') {
+                        for (var idxSyncEst = 0; idxSyncEst < datosOperacion.estaciones.length; idxSyncEst++) {
+                            var estSync = datosOperacion.estaciones[idxSyncEst];
+                            if (estSync && estSync.codigo) {
+                                await reservarEstacionNube(estSync.codigo, nombreTitular, estSync.detalle || 'Reserva FIFO');
+                            }
+                        }
+                    }
+                    agregarReservaParaEncargado(nombreTitular, datosOperacion.modalidad || 'Local', importeTotal, datosOperacion.items || []);
+                } else if (tipoOperacion === 'reserva' && typeof guardarReservaNube === 'function') {
+                    await guardarReservaNube(datosOperacion.cliente, datosOperacion.sala);
+                } else if (tipoOperacion === 'consulta' && typeof guardarConsultaNube === 'function') {
+                    await guardarConsultaNube(datosOperacion.cliente, datosOperacion.mensaje);
+                } else if (tipoOperacion === 'producto' && typeof guardarProductoExtraNube === 'function') {
+                    await guardarProductoExtraNube(datosOperacion.nombre, datosOperacion.categoria, datosOperacion.precio, datosOperacion.imagen);
+                } else if (tipoOperacion === 'promocion' && typeof guardarPromocionNube === 'function') {
+                    await guardarPromocionNube(datosOperacion);
+                } else if (tipoOperacion === 'cuenta' && typeof registrarCuentaNube === 'function') {
+                    await registrarCuentaNube(datosOperacion.usuario, datosOperacion.clave, datosOperacion.rol || 'cliente');
+                } else if (tipoOperacion === 'actividad' && typeof registrarActividadClienteNube === 'function') {
+                    await registrarActividadClienteNube(datosOperacion.cliente, datosOperacion.accion, datosOperacion.detalle);
+                }
+
+                cantidadSincronizada++;
+                registrarEvento('SYNC FIFO ONLINE', 'Operacion [' + tipoOperacion.toUpperCase() + '] sincronizada.');
+            }
+
+            if (colaPendiente.length === 0) {
+                localStorage.removeItem('colaSincronizacionCiber');
+            } else {
+                localStorage.setItem('colaSincronizacionCiber', JSON.stringify(colaPendiente));
+            }
+            actualizarMetricasAdmin();
+            await sincronizarEstadoEstaciones();
+            if (sesionActual && sesionActual.rol === 'admin') {
+                await cargarPanelAdminEjecutivo();
+            }
+            if (cantidadSincronizada > 0) {
+                mostrarToast('CONEXION RESTAURADA', 'Se sincronizaron ' + cantidadSincronizada + ' operaciones pendientes FIFO.', false);
+            }
+        } finally {
+            sincronizacionFifoActiva = false;
         }
-        localStorage.setItem('colaSincronizacionCiber', JSON.stringify(colaPendiente));
-        actualizarMetricasAdmin();
-        mostrarToast('CONEXION RESTAURADA', 'Se sincronizaron ' + cantidadSincronizada + ' pedidos pendientes FIFO.', false);
     }
 
-    $(document).off('click', '.btn-preset-rol').on('click', '.btn-preset-rol', function () {
-        var rolSeleccionado = $(this).attr('data-rol');
-        $('#login-rol').val(rolSeleccionado);
-        if (!$('#login-usuario').val().trim()) {
-            var aliasDefault = rolSeleccionado === 'admin' ? 'AdminRoot' : (rolSeleccionado === 'encargado' ? 'StaffLevelUp' : 'GamerPro');
-            $('#login-usuario').val(aliasDefault);
+    function cambiarPestanaAuth(panelObjetivo) {
+        $('#login-error, #registro-error').hide().text('');
+        $('.btn-tab-auth').removeClass('activo');
+        $('.btn-tab-auth[data-auth-panel="' + panelObjetivo + '"]').addClass('activo');
+        $('.auth-panel').removeClass('activo').hide();
+        $('#' + panelObjetivo).addClass('activo').css('display', 'flex');
+    }
+
+    function guardarCuentaLocalRespaldo(nombreUsuario, claveAcceso, rolUsuario) {
+        var listaCuentas = [];
+        try {
+            var rawCuentas = localStorage.getItem('cuentasLocalesLevelUp');
+            listaCuentas = rawCuentas ? JSON.parse(rawCuentas) : [];
+            if (!Array.isArray(listaCuentas)) listaCuentas = [];
+        } catch (errorCuentas) {
+            listaCuentas = [];
         }
+        var existeIndex = -1;
+        for (var idxCuenta = 0; idxCuenta < listaCuentas.length; idxCuenta++) {
+            if (String(listaCuentas[idxCuenta].usuario || '').toLowerCase() === nombreUsuario.toLowerCase()) {
+                existeIndex = idxCuenta;
+                break;
+            }
+        }
+        var registroCuenta = { usuario: nombreUsuario, clave: claveAcceso, rol: rolUsuario };
+        if (existeIndex >= 0) {
+            listaCuentas[existeIndex] = registroCuenta;
+        } else {
+            listaCuentas.push(registroCuenta);
+        }
+        localStorage.setItem('cuentasLocalesLevelUp', JSON.stringify(listaCuentas));
+    }
+
+    function validarCuentaRespaldo(nombreUsuario, claveAcceso) {
+        var usuarioNorm = nombreUsuario.toLowerCase();
+        var cuentasSistema = {
+            cliente: { usuario: 'cliente', clave: '1234', rol: 'cliente' },
+            encargado: { usuario: 'encargado', clave: '1234', rol: 'encargado' },
+            admin: { usuario: 'admin', clave: '1234', rol: 'admin' }
+        };
+        if (cuentasSistema[usuarioNorm] && cuentasSistema[usuarioNorm].clave === claveAcceso) {
+            return { usuario: cuentasSistema[usuarioNorm].usuario, rol: cuentasSistema[usuarioNorm].rol };
+        }
+        try {
+            var rawLocales = localStorage.getItem('cuentasLocalesLevelUp');
+            var locales = rawLocales ? JSON.parse(rawLocales) : [];
+            if (Array.isArray(locales)) {
+                for (var idxLoc = 0; idxLoc < locales.length; idxLoc++) {
+                    var filaLoc = locales[idxLoc];
+                    if (String(filaLoc.usuario || '').toLowerCase() === usuarioNorm && filaLoc.clave === claveAcceso) {
+                        return { usuario: filaLoc.usuario, rol: filaLoc.rol || 'cliente' };
+                    }
+                }
+            }
+        } catch (errorLoc) {
+            return null;
+        }
+        return null;
+    }
+
+    $(document).off('click', '.btn-tab-auth, .btn-link-auth').on('click', '.btn-tab-auth, .btn-link-auth', function () {
+        cambiarPestanaAuth($(this).attr('data-auth-panel'));
     });
 
-    $(document).off('submit', '#form-login-rol').on('submit', '#form-login-rol', function (eventoSubmit) {
+    $(document).off('click', '.btn-toggle-clave').on('click', '.btn-toggle-clave', function () {
+        var $botonToggle = $(this);
+        var idCampo = $botonToggle.attr('data-target');
+        var $campoInput = $('#' + idCampo);
+        if ($campoInput.length === 0) return;
+        var esPassword = $campoInput.attr('type') === 'password';
+        $campoInput.attr('type', esPassword ? 'text' : 'password');
+        $botonToggle.text(esPassword ? 'Ocultar' : 'Ver');
+    });
+
+    $(document).off('click', '.btn-demo-rol').on('click', '.btn-demo-rol', function () {
+        var rolElegido = $(this).attr('data-rol') || 'cliente';
+        var usuarioDemo = $(this).attr('data-usuario') || 'Invitado';
+        sesionActual = { usuario: usuarioDemo, rol: rolElegido };
+        sessionStorage.setItem('sesionRolLevelUp', JSON.stringify(sesionActual));
+        $('#login-error, #registro-error').hide().text('');
+        $('.acceso-demo').removeAttr('open');
+        aplicarPermisosRol(rolElegido, usuarioDemo);
+        $('#pantalla-login').stop(true, true).hide();
+        if (rolElegido === 'cliente') {
+            registrarActividadCliente('INICIO_SESION', 'Acceso cliente rapido (' + usuarioDemo + ')', usuarioDemo);
+        }
+        registrarEvento('SESION DEMO', 'Acceso de evaluacion: ' + usuarioDemo + ' | Rol: ' + rolElegido.toUpperCase());
+        mostrarToast('SESION ACTIVA', 'Bienvenido ' + usuarioDemo + ' (' + rolElegido + ').', false);
+    });
+
+    $(document).off('submit', '#form-login-rol').on('submit', '#form-login-rol', async function (eventoSubmit) {
         eventoSubmit.preventDefault();
         var usuarioIngresado = $('#login-usuario').val().trim();
-        var rolSeleccionado = $('#login-rol').val();
+        var claveIngresada = ($('#login-clave').val() || '').trim();
 
-        if (usuarioIngresado === '') {
-            $('#login-error').text('Ingresa un nombre o GamerTag valido.').slideDown('fast');
+        if (usuarioIngresado === '' || claveIngresada === '') {
+            $('#login-error').text('Ingresa usuario y contrasena.').slideDown('fast');
             return;
         }
 
-        $('#login-error').hide();
-        sesionActual = { usuario: usuarioIngresado, rol: rolSeleccionado };
-        localStorage.setItem('sesionRolLevelUp', JSON.stringify(sesionActual));
-        aplicarPermisosRol(rolSeleccionado, usuarioIngresado);
-        $('#pantalla-login').fadeOut('fast');
-        registrarEvento('SESION INICIADA', 'Usuario: ' + usuarioIngresado + ' | Rol: ' + rolSeleccionado.toUpperCase());
-        mostrarToast('SESION ACTIVA', 'Bienvenido ' + usuarioIngresado + ' (' + rolSeleccionado + ').', false);
+        var sesionResuelta = null;
+        var origenAcceso = 'Validacion local';
+
+        if (navigator.onLine && typeof autenticarCuentaNube === 'function') {
+            var resAuth = await autenticarCuentaNube(usuarioIngresado, claveIngresada);
+            if (resAuth.ok && resAuth.cuenta) {
+                sesionResuelta = {
+                    usuario: resAuth.cuenta.usuario || usuarioIngresado,
+                    rol: resAuth.cuenta.rol || 'cliente'
+                };
+                origenAcceso = 'Supabase';
+            }
+        }
+
+        if (!sesionResuelta) {
+            sesionResuelta = validarCuentaRespaldo(usuarioIngresado, claveIngresada);
+        }
+
+        if (!sesionResuelta) {
+            $('#login-error').text('Usuario o contrasena incorrectos.').slideDown('fast');
+            return;
+        }
+
+        $('#login-error').hide().text('');
+        this.reset();
+        sesionActual = sesionResuelta;
+        sessionStorage.setItem('sesionRolLevelUp', JSON.stringify(sesionActual));
+        aplicarPermisosRol(sesionActual.rol, sesionActual.usuario);
+        $('#pantalla-login').stop(true, true).hide();
+        if (sesionActual.rol === 'cliente') {
+            registrarActividadCliente('INICIO_SESION', 'Inicio de sesion (' + origenAcceso + ')', sesionActual.usuario);
+        }
+        registrarEvento('SESION INICIADA', origenAcceso + ': ' + sesionActual.usuario + ' | Rol: ' + sesionActual.rol.toUpperCase());
+        mostrarToast('BIENVENIDO', 'Hola ' + sesionActual.usuario + ', sesion iniciada correctamente.', false);
+    });
+
+    $(document).off('submit', '#form-registro-cuenta').on('submit', '#form-registro-cuenta', async function (eventoRegistro) {
+        eventoRegistro.preventDefault();
+        var usuarioNuevo = $('#reg-usuario').val().trim();
+        var claveNueva = ($('#reg-clave').val() || '').trim();
+        var claveConfirm = ($('#reg-clave-confirm').val() || '').trim();
+
+        if (usuarioNuevo === '' || claveNueva.length < 4) {
+            $('#registro-error').text('El usuario es obligatorio y la contrasena debe tener al menos 4 caracteres.').slideDown('fast');
+            return;
+        }
+        if (claveNueva !== claveConfirm) {
+            $('#registro-error').text('Las contrasenas no coinciden.').slideDown('fast');
+            return;
+        }
+
+        var cuentaGuardada = false;
+        if (navigator.onLine && typeof registrarCuentaNube === 'function') {
+            var resReg = await registrarCuentaNube(usuarioNuevo, claveNueva, 'cliente');
+            cuentaGuardada = Boolean(resReg && resReg.ok);
+        }
+        if (!cuentaGuardada) {
+            encolarOperacionOfflineFIFO('cuenta', { usuario: usuarioNuevo, clave: claveNueva, rol: 'cliente' });
+        }
+        guardarCuentaLocalRespaldo(usuarioNuevo, claveNueva, 'cliente');
+
+        $('#registro-error').hide().text('');
+        this.reset();
+        cambiarPestanaAuth('auth-panel-login');
+        sesionActual = { usuario: usuarioNuevo, rol: 'cliente' };
+        sessionStorage.setItem('sesionRolLevelUp', JSON.stringify(sesionActual));
+        aplicarPermisosRol('cliente', usuarioNuevo);
+        $('#pantalla-login').stop(true, true).hide();
+        registrarActividadCliente('REGISTRO_CUENTA', 'Nueva cuenta registrada: ' + usuarioNuevo, usuarioNuevo);
+        registrarEvento('REGISTRO CLIENTE', 'Nueva cuenta cliente: ' + usuarioNuevo);
+        mostrarToast('BIENVENIDO A LEVELUP', 'Cuenta creada para ' + usuarioNuevo + '. Ya puedes reservar y pedir snacks.', false);
     });
 
     $(document).off('click', '#btn-cerrar-sesion').on('click', '#btn-cerrar-sesion', function () {
-        localStorage.removeItem('sesionRolLevelUp');
+        sessionStorage.removeItem('sesionRolLevelUp');
         sesionActual = null;
-        $('.permiso-encargado, .permiso-admin').hide();
-        cambiarVistaHUD('vista-lobby', '', 'Lobby');
-        $('#pantalla-login').fadeIn('fast');
+        detenerAutoRefreshAdmin();
+        aplicarPermisosRol('cliente', 'Invitado');
+        cambiarPestanaAuth('auth-panel-login');
+        $('#pantalla-login').stop(true, true).css('display', 'flex');
         registrarEvento('SESION CERRADA', 'Usuario cerro sesion.');
     });
 
@@ -600,6 +1384,7 @@ $(document).ready(function () {
         }
     });
 
+    // Semana 2 - Acordeon Animado jQuery
     $(document).off('click', '.btn-toggle-admin-card').on('click', '.btn-toggle-admin-card', function () {
         var $botonToggle = $(this);
         $botonToggle.toggleClass('abierto');
@@ -612,6 +1397,7 @@ $(document).ready(function () {
         cambiarVistaHUD('vista-lobby', '', 'Lobby');
     });
 
+    // Semana 1 - Modo Oscuro y Claro
     $(document).off('click', '#btn-tema').on('click', '#btn-tema', function () {
         $('body').toggleClass('modo-claro');
         var nombreModo = $('body').hasClass('modo-claro') ? 'Claro' : 'Oscuro';
@@ -625,6 +1411,7 @@ $(document).ready(function () {
         registrarEvento('INTERACCION', 'Like registrado (Total: ' + contadorLikes + ')');
     });
 
+    // Semana 1 - Bitacora Dia 1 Bubbling Dblclick
     $(document).off('dblclick', '.estacion, .card-snack').on('dblclick', '.estacion, .card-snack', function () {
         contadorLikes += 2;
         $('#contador-likes').text(contadorLikes);
@@ -633,14 +1420,16 @@ $(document).ready(function () {
     });
 
     $(document).off('click', '#btn-reclamar-promo').on('click', '#btn-reclamar-promo', function () {
-        if (promoExpirada || promoReclamada) {
+        if (promoExpirada || promoReclamada || segundosPromo10m <= 0) {
             return;
         }
+        var nombrePromo = $(this).attr('data-nombre') || 'Promo Express';
+        var precioPromo = parseInt($(this).attr('data-precio'), 10) || 45;
         promoReclamada = true;
-        clearInterval(intervaloPromo10m);
-        agregarItemCarrito($(this).attr('data-nombre'), parseInt($(this).attr('data-precio'), 10), 1);
+        agregarItemCarrito(nombrePromo, precioPromo, 1);
         $('#toggle-promo').prop('checked', false);
         $(this).prop('disabled', true).text('PROMO RECLAMADA');
+        registrarActividadCliente('PROMO_RECLAMADA', nombrePromo + ' (' + precioPromo + ' Bs)');
     });
 
     $(document).off('click', '.accordion-btn').on('click', '.accordion-btn', function () {
@@ -652,9 +1441,10 @@ $(document).ready(function () {
         });
     });
 
+    // Semana 1 - Filtro de Catalogo por Dataset
     $(document).off('click', '.btn-filtro-consola').on('click', '.btn-filtro-consola', function () {
-        var consolaFiltro = $(this).attr('data-consola');
-        var temaAsociado = $(this).attr('data-tema');
+        var consolaFiltro = this.dataset.consola || $(this).attr('data-consola');
+        var temaAsociado = this.dataset.tema || $(this).attr('data-tema');
         $('.btn-filtro-consola').removeClass('activo');
         $(this).addClass('activo');
         actualizarFondoHUD(temaAsociado);
@@ -667,7 +1457,7 @@ $(document).ready(function () {
     });
 
     $(document).off('click', '.btn-filtro-pc').on('click', '.btn-filtro-pc', function () {
-        var gamaFiltro = $(this).attr('data-gama');
+        var gamaFiltro = this.dataset.gama || $(this).attr('data-gama');
         $('.btn-filtro-pc').removeClass('activo');
         $(this).addClass('activo');
         if (gamaFiltro === 'todas') {
@@ -679,7 +1469,7 @@ $(document).ready(function () {
     });
 
     $(document).off('click', '.btn-filtro-snack').on('click', '.btn-filtro-snack', function () {
-        var categoriaFiltro = $(this).attr('data-categoria');
+        var categoriaFiltro = this.dataset.categoria || $(this).attr('data-categoria');
         $('.btn-filtro-snack').removeClass('activo');
         $(this).addClass('activo');
         if (categoriaFiltro === 'todos') {
@@ -712,7 +1502,7 @@ $(document).ready(function () {
         var juegoElegido = $tarjeta.find('.select-juego-estacion').val();
         var cantidadHoras = parseInt($tarjeta.find('.select-horas-estacion').val(), 10) || 1;
         var tarifaBase = parseInt($tarjeta.attr('data-precio'), 10);
-        var detalleReserva = codigoEst + ' [' + juegoElegido + ' | ' + cantidadHoras + 'h]';
+        var detalleSolo = juegoElegido + ' | ' + cantidadHoras + 'h';
         var extraPorControles = 0;
 
         if ($tarjeta.attr('data-tipo') === 'consola') {
@@ -720,9 +1510,11 @@ $(document).ready(function () {
             if (cantControles >= 3) {
                 extraPorControles = (cantControles - 2) * 3;
             }
-            detalleReserva += ' (' + cantControles + ' Ctrls)';
+            detalleSolo += ' (' + cantControles + ' Ctrls)';
         }
-        agregarItemCarrito(detalleReserva, (tarifaBase + extraPorControles) * cantidadHoras, 1);
+        var detalleReserva = codigoEst + ' [' + detalleSolo + ']';
+        agregarItemCarrito(detalleReserva, (tarifaBase + extraPorControles) * cantidadHoras, 1, codigoEst, detalleSolo);
+        registrarActividadCliente('RESERVA_ESTACION', detalleReserva);
     });
 
     $(document).off('click', '.btn-reservar-arcade').on('click', '.btn-reservar-arcade', function () {
@@ -731,7 +1523,9 @@ $(document).ready(function () {
         var codigoArc = $tarjetaArc.attr('data-codigo');
         var juegoArc = $tarjetaArc.attr('data-juego');
         var precioArc = parseInt($opcionModalidad.attr('data-precio'), 10);
-        agregarItemCarrito(codigoArc + ' ' + juegoArc + ' (' + $opcionModalidad.text() + ')', precioArc, 1);
+        var detalleSolo = juegoArc + ' (' + $opcionModalidad.text() + ')';
+        agregarItemCarrito(codigoArc + ' ' + detalleSolo, precioArc, 1, codigoArc, detalleSolo);
+        registrarActividadCliente('RESERVA_ESTACION', codigoArc + ' ' + detalleSolo);
     });
 
     $(document).off('click', '.btn-pedir-snack').on('click', '.btn-pedir-snack', function () {
@@ -752,12 +1546,24 @@ $(document).ready(function () {
 
     $(document).off('click', '#btn-vaciar-carrito').on('click', '#btn-vaciar-carrito', function () {
         totalItems = 0;
+        promoReclamada = false;
         $('#lista-carrito').html('<li class="carrito-vacio">Sin reservas ni snacks activos.</li>');
+        if (!promoExpirada && promocionActivaActual) {
+            actualizarVistaPromoCliente(promocionActivaActual);
+            $('#btn-reclamar-promo').prop('disabled', false);
+        }
         actualizarTotalVisual(0);
     });
 
+    // Semana 1 - Bitacora Dia 1 Keyup Buscador
     $(document).off('keyup', '#buscador-rapido').on('keyup', '#buscador-rapido', function () {
         var consultaBusqueda = $(this).val().toLowerCase().trim();
+        if (temporizadorBusquedaRadar) clearTimeout(temporizadorBusquedaRadar);
+        if (consultaBusqueda.length >= 2) {
+            temporizadorBusquedaRadar = setTimeout(function () {
+                registrarActividadCliente('FILTRO_BUSQUEDA', 'Busqueda rapida: "' + consultaBusqueda + '"');
+            }, 650);
+        }
         $('#sugerencias-busqueda .item-sugerencia').each(function () {
             var palabrasClave = $(this).attr('data-keywords').toLowerCase();
             var textoVisible = $(this).text().toLowerCase();
@@ -773,6 +1579,7 @@ $(document).ready(function () {
         var $sugerencia = $(this);
         $('#toggle-buscador-top').prop('checked', false);
         cambiarVistaHUD($sugerencia.attr('data-vista'), $sugerencia.attr('data-tema'), $sugerencia.attr('data-titulo'));
+        registrarActividadCliente('FILTRO_BUSQUEDA', 'Acceso rapido: ' + ($sugerencia.attr('data-titulo') || ''));
         if ($sugerencia.attr('data-consola')) {
             var consolaObjetivo = $sugerencia.attr('data-consola');
             $('.btn-filtro-consola').removeClass('activo');
@@ -782,6 +1589,7 @@ $(document).ready(function () {
         }
     });
 
+    // Semana 2 - Filtro de 3 Capas
     $(document).off('change', '#capa1').on('change', '#capa1', function () {
         var zonaElegida = $(this).val();
         var $selectCapa2 = $('#capa2');
@@ -824,10 +1632,12 @@ $(document).ready(function () {
         var modeloElegido = $(this).val();
         if (modeloElegido) {
             $('#resultadoFiltro').text('Seleccion lista: ' + $('#capa1').val().toUpperCase() + ' -> ' + $('#capa2').val() + ' -> ' + modeloElegido);
+            registrarActividadCliente('FILTRO_BUSQUEDA', 'Filtro cascada: ' + modeloElegido);
         }
     });
 
-    $(document).off('submit', '#form-consulta-cliente').on('submit', '#form-consulta-cliente', function (eventoConsulta) {
+    // Semana 1 - Validacion Formulario con Regex
+    $(document).off('submit', '#form-consulta-cliente').on('submit', '#form-consulta-cliente', async function (eventoConsulta) {
         eventoConsulta.preventDefault();
         var nombreRemitente = $('#consulta-nombre').val().trim();
         var correoRemitente = $('#consulta-correo').val().trim();
@@ -847,27 +1657,68 @@ $(document).ready(function () {
         $alertaCaja.addClass('alerta-exito').text('Consulta enviada al encargado.').fadeIn('fast').delay(2600).fadeOut('slow');
         var indiceConsulta = consultasActivas.length + 1;
         consultasActivas.push({ id: indiceConsulta, nombre: nombreRemitente, correo: correoRemitente, mensaje: textoConsulta });
+        agregarConsultaPanelEncargadoDOM(nombreRemitente, correoRemitente, textoConsulta);
 
-        var $listaConsultas = $('#lista-consultas-encargado');
-        if ($listaConsultas.find('.vacio-gestion').length > 0) {
-            $listaConsultas.empty();
+        var consultaGuardada = false;
+        if (navigator.onLine && typeof guardarConsultaNube === 'function') {
+            var resCons = await guardarConsultaNube(nombreRemitente, textoConsulta);
+            consultaGuardada = Boolean(resCons && resCons.ok);
         }
-        var $itemConsulta = $('<li>').addClass('item-gestion');
-        var $autorTexto = $('<strong>').text(nombreRemitente + ' (' + correoRemitente + ')');
-        var $mensajeTexto = $('<p>').text(textoConsulta);
-        var $cajaRespuesta = $('<div>').addClass('respuesta-encargado-box');
-        var $inputRespuesta = $('<input>').attr('type', 'text').attr('placeholder', 'Escribir respuesta al cliente...').addClass('input-respuesta-encargado');
-        var $botonResponder = $('<button>').attr('type', 'button').addClass('btn-responder-consulta').text('Enviar Respuesta');
-        var $salidaRespuesta = $('<span>').addClass('texto-respuesta-emitida');
-        $cajaRespuesta.append($inputRespuesta, $botonResponder, $salidaRespuesta);
-        $itemConsulta.append($autorTexto, $mensajeTexto, $cajaRespuesta);
-        $listaConsultas.prepend($itemConsulta);
+        if (!consultaGuardada) {
+            encolarOperacionOfflineFIFO('consulta', { cliente: nombreRemitente, mensaje: textoConsulta });
+        }
 
+        registrarActividadCliente('CONSULTA_ENVIADA', nombreRemitente + ': ' + textoConsulta);
         $('#form-consulta-cliente')[0].reset();
         registrarEvento('CONSULTA CLIENTE', 'Nueva consulta de ' + nombreRemitente);
     });
 
-    $(document).off('submit', '#form-nuevo-snack').on('submit', '#form-nuevo-snack', function (eventoSnack) {
+    // Semana 2 - Reservas Anti-XSS
+    $(document).off('submit', '#formReserva').on('submit', '#formReserva', async function (eventoSubmit) {
+        eventoSubmit.preventDefault();
+        const nombreCliente = $('#clienteNombre').val().trim();
+        const salaElegida = $('#salaSelect').val();
+        if (!nombreCliente) return;
+        const $itemReserva = $('<li>').addClass('item-reserva');
+        const $textoSeguro = $('<strong>').text(nombreCliente + ' - ');
+        const $detalleSala = $('<span>').text(salaElegida);
+        $itemReserva.append($textoSeguro, $detalleSala);
+        $('#listaReservas').append($itemReserva);
+        var reservaGuardada = false;
+        if (navigator.onLine && typeof guardarReservaNube === 'function') {
+            var resSala = await guardarReservaNube(nombreCliente, salaElegida);
+            reservaGuardada = Boolean(resSala && resSala.ok);
+        }
+        if (!reservaGuardada) {
+            encolarOperacionOfflineFIFO('reserva', { cliente: nombreCliente, sala: salaElegida });
+        }
+        registrarActividadCliente('RESERVA_SALA', nombreCliente + ' -> ' + salaElegida);
+        this.reset();
+        registrarEvento('RESERVA SALA VIP', nombreCliente + ' -> ' + salaElegida);
+        mostrarToast('RESERVA VIP', 'Sala asignada de forma segura para ' + nombreCliente + '.', false);
+    });
+
+    // Semana 2 - Cola Dinamica Blindada
+    $(document).off('click', '#btnPedir').on('click', '#btnPedir', function () {
+        const temaPedido = $('#inputCancion').val().trim();
+        if (!temaPedido) return;
+        const $filaPeticion = $('<div>').addClass('fila-cancion');
+        const $tituloPeticion = $('<span>').addClass('titulo-truncado').text(temaPedido);
+        const $botonQuitar = $('<button>').attr('type', 'button').addClass('btn-tactil btn-quitar').text('X');
+        $filaPeticion.append($tituloPeticion, $botonQuitar);
+        $('#listaCanciones').append($filaPeticion);
+        $('#inputCancion').val('');
+        registrarActividadCliente('COLA_MUSICAL', 'Cancion solicitada: ' + temaPedido);
+        registrarEvento('COLA MUSICAL', 'Peticion agregada: ' + temaPedido);
+    });
+
+    $(document).off('click', '.btn-quitar').on('click', '.btn-quitar', function () {
+        $(this).closest('.fila-cancion').remove();
+        registrarEvento('COLA MUSICAL', 'Peticion eliminada de la cola.');
+    });
+
+    // Semana 2 - Gestion Encargado Stock en Vivo
+    $(document).off('submit', '#form-nuevo-snack').on('submit', '#form-nuevo-snack', async function (eventoSnack) {
         eventoSnack.preventDefault();
         var nombreProducto = $('#nuevo-snack-nombre').val().trim();
         var categoriaProducto = $('#nuevo-snack-categoria').val();
@@ -879,7 +1730,7 @@ $(document).ready(function () {
             return;
         }
 
-        var imagenFallback = listaSnacksGlobal.length > 0 ? listaSnacksGlobal[0].imagen : '';
+        var imagenFallback = listaSnacksGlobal.length > 0 ? listaSnacksGlobal[0].imagen : 'icons/icon-192.png';
         listaSnacksGlobal.push({
             nombre: nombreProducto,
             categoria: categoriaProducto,
@@ -888,6 +1739,19 @@ $(document).ready(function () {
             imagen: imagenFallback
         });
         renderizarTarjetasSnacks(listaSnacksGlobal);
+        var productoGuardado = false;
+        if (navigator.onLine && typeof guardarProductoExtraNube === 'function') {
+            var resProd = await guardarProductoExtraNube(nombreProducto, categoriaProducto, precioProducto, imagenFallback);
+            productoGuardado = Boolean(resProd && resProd.ok);
+        }
+        if (!productoGuardado) {
+            encolarOperacionOfflineFIFO('producto', {
+                nombre: nombreProducto,
+                categoria: categoriaProducto,
+                precio: precioProducto,
+                imagen: imagenFallback
+            });
+        }
         $('#form-nuevo-snack')[0].reset();
         registrarEvento('CATALOGO ENCARGADO', 'Snack agregado: ' + nombreProducto + ' (' + precioProducto + ' Bs)');
         mostrarToast('SNACK PUBLICADO', nombreProducto + ' visible en catalogo.', false);
@@ -912,6 +1776,7 @@ $(document).ready(function () {
         mostrarToast('CONSULTA RESPONDIDA', 'Se registro la respuesta al cliente.', false);
     });
 
+    // Semana 2 - Calculador Modal 30s y Checkout
     $(document).off('click', '#btn-abrir-modal').on('click', '#btn-abrir-modal', function () {
         if (totalItems === 0) {
             mostrarToast('CARRITO VACIO', 'Selecciona una estacion o snack antes de confirmar.', true);
@@ -946,7 +1811,7 @@ $(document).ready(function () {
         $('#modal-confirmacion').fadeOut('fast');
     });
 
-    $(document).off('submit', '#form-checkout').on('submit', '#form-checkout', function (eventoCheckout) {
+    $(document).off('submit', '#form-checkout').on('submit', '#form-checkout', async function (eventoCheckout) {
         eventoCheckout.preventDefault();
         var nombreCliente = $('#input-nombre-cliente').val().trim();
         var modalidadElegida = $('#select-modalidad').val();
@@ -958,41 +1823,190 @@ $(document).ready(function () {
         }
 
         var arregloItems = [];
+        var listaEstacionesOrden = [];
         $('#lista-carrito .item-carrito-li').each(function () {
             arregloItems.push($(this).attr('data-nombre') + ' (' + $(this).attr('data-subtotal') + ' Bs)');
+            var estId = $(this).attr('data-estacion-id');
+            if (estId) {
+                listaEstacionesOrden.push({
+                    codigo: estId,
+                    detalle: $(this).attr('data-detalle-estacion') || $(this).attr('data-nombre')
+                });
+            }
         });
 
         clearInterval(intervaloModal);
         $('#modal-confirmacion').fadeOut('fast');
 
-        if (!navigator.onLine) {
-            var colaOffline = obtenerColaSincronizacion();
-            colaOffline.push({
-                nombre: nombreCliente,
+        var guardadoNubeOk = false;
+        if (navigator.onLine && typeof guardarPedidoNube === 'function') {
+            var resPedidoNube = await guardarPedidoNube({
+                cliente: nombreCliente,
                 modalidad: modalidadElegida,
                 formaPago: formaPagoElegida,
-                total: totalPagar,
-                items: arregloItems,
-                fecha: new Date().toISOString()
+                montoTotal: totalPagar,
+                items: arregloItems
             });
-            localStorage.setItem('colaSincronizacionCiber', JSON.stringify(colaOffline));
+            guardadoNubeOk = Boolean(resPedidoNube && resPedidoNube.ok);
+            for (var idxEstConfirm = 0; idxEstConfirm < listaEstacionesOrden.length; idxEstConfirm++) {
+                var estObj = listaEstacionesOrden[idxEstConfirm];
+                var idGenerado = '';
+                if (typeof reservarEstacionNube === 'function') {
+                    var resEstNube = await reservarEstacionNube(estObj.codigo, nombreCliente, estObj.detalle);
+                    if (resEstNube.ok && resEstNube.reserva && resEstNube.reserva.id) {
+                        idGenerado = resEstNube.reserva.id;
+                    }
+                }
+                guardarOcupacionLocalEstacion(estObj.codigo, nombreCliente, estObj.detalle, idGenerado);
+            }
+        }
+
+        if (!navigator.onLine || !guardadoNubeOk) {
+            for (var idxEstOff = 0; idxEstOff < listaEstacionesOrden.length; idxEstOff++) {
+                var estOff = listaEstacionesOrden[idxEstOff];
+                guardarOcupacionLocalEstacion(estOff.codigo, nombreCliente, estOff.detalle, '');
+            }
+            encolarOperacionOfflineFIFO('pedido', {
+                cliente: nombreCliente,
+                modalidad: modalidadElegida,
+                formaPago: formaPagoElegida,
+                montoTotal: totalPagar,
+                items: arregloItems,
+                estaciones: listaEstacionesOrden,
+                fechaHora: new Date().toISOString()
+            });
+            registrarActividadCliente('PEDIDO_CONFIRMADO', nombreCliente + ' | ' + totalPagar + ' Bs | ' + modalidadElegida + ' (Offline)');
             $('#form-checkout')[0].reset();
             totalItems = 0;
+            promoReclamada = false;
             $('#lista-carrito').html('<li class="carrito-vacio">Sin reservas ni snacks activos.</li>');
             actualizarTotalVisual(0);
             actualizarMetricasAdmin();
-            mostrarToast('GUARDADO LOCALMENTE (OFFLINE)', 'Pedido guardado en cola FIFO para sincronizar.', true);
+            sincronizarEstadoEstaciones();
+            mostrarToast('GUARDADO LOCALMENTE (OFFLINE)', 'Pedido guardado en cola FIFO para sincronizar con Supabase.', true);
             registrarEvento('OFFLINE FIFO', 'Pedido guardado en cola local: ' + nombreCliente);
             return;
         }
 
         agregarReservaParaEncargado(nombreCliente, modalidadElegida, totalPagar, arregloItems);
+        registrarActividadCliente('PEDIDO_CONFIRMADO', nombreCliente + ' | ' + totalPagar + ' Bs | ' + modalidadElegida);
         $('#form-checkout')[0].reset();
         totalItems = 0;
+        promoReclamada = false;
         $('#lista-carrito').html('<li class="carrito-vacio">Sin reservas ni snacks activos.</li>');
+        if (!promoExpirada && promocionActivaActual) {
+            actualizarVistaPromoCliente(promocionActivaActual);
+            $('#btn-reclamar-promo').prop('disabled', false);
+        }
         actualizarTotalVisual(0);
+        await sincronizarEstadoEstaciones();
         mostrarToast('PEDIDO CONFIRMADO', 'Orden registrada para ' + nombreCliente + ' via ' + formaPagoElegida + '.', false);
         registrarEvento('CHECKOUT CONFIRMADO', 'Cliente: ' + nombreCliente + ' | Pago: ' + formaPagoElegida);
+    });
+
+    // Semana 3 - Hub Compacto Lobby por Pestanas
+    $(document).off('click', '.btn-hub-tab').on('click', '.btn-hub-tab', function () {
+        var panelObjetivo = $(this).attr('data-hub-panel');
+        $('.btn-hub-tab').removeClass('activo');
+        $(this).addClass('activo');
+        $('.lobby-hub-panel').removeClass('activo').hide();
+        $('#' + panelObjetivo).addClass('activo').css('display', 'flex');
+    });
+
+    // Semana 3 - Backend Supabase Estaciones, Pedidos, Promos y Actividad
+    $(document).off('click', '.btn-liberar-estacion').on('click', '.btn-liberar-estacion', async function () {
+        var $btnLib = $(this);
+        var idReserva = $btnLib.attr('data-reserva-id');
+        var codigoEst = $btnLib.attr('data-estacion-id');
+        if (idReserva && typeof liberarEstacionNube === 'function') {
+            await liberarEstacionNube(idReserva);
+        }
+        eliminarOcupacionLocalEstacion(codigoEst);
+        await sincronizarEstadoEstaciones();
+        mostrarToast('ESTACION LIBERADA', codigoEst + ' vuelve a estar disponible.', false);
+        registrarEvento('ENCARGADO', 'Estacion liberada: ' + codigoEst);
+    });
+
+    $(document).off('submit', '#form-editor-promo').on('submit', '#form-editor-promo', async function (eventoPromo) {
+        eventoPromo.preventDefault();
+        var tituloPromo = $('#promo-edit-titulo').val().trim();
+        var descPromo = $('#promo-edit-desc').val().trim();
+        var precioPromo = parseInt($('#promo-edit-precio').val(), 10) || 45;
+        var duracionMin = parseInt($('#promo-edit-duracion').val(), 10) || 15;
+        var textoBtnPromo = $('#promo-edit-boton').val().trim() || ('Reclamar Promo (' + precioPromo + ' Bs)');
+        var estaActiva = ($('#promo-edit-estado').val() || 'activa') === 'activa';
+
+        if (tituloPromo === '' || descPromo === '') {
+            mostrarToast('VALIDACION', 'Completa el titulo y descripcion de la promocion.', true);
+            return;
+        }
+
+        var nuevaPromo = {
+            titulo: tituloPromo,
+            descripcion: descPromo,
+            precio: precioPromo,
+            texto_boton: textoBtnPromo,
+            activa: estaActiva,
+            expira_en: new Date(Date.now() + (duracionMin * 60000)).toISOString()
+        };
+
+        guardarPromocionLocalRespaldo(nuevaPromo);
+        actualizarVistaPromoCliente(nuevaPromo);
+
+        var promoNubeOk = false;
+        if (navigator.onLine && typeof guardarPromocionNube === 'function') {
+            var resSavePromo = await guardarPromocionNube(nuevaPromo);
+            promoNubeOk = Boolean(resSavePromo && resSavePromo.ok);
+        }
+        if (!promoNubeOk) {
+            encolarOperacionOfflineFIFO('promocion', nuevaPromo);
+        }
+
+        mostrarToast('PROMOCION PUBLICADA', tituloPromo + ' actualizada para los clientes.', false);
+        registrarEvento('PROMO EDITOR', 'Promocion actualizada: ' + tituloPromo + ' (' + precioPromo + ' Bs)');
+    });
+
+    $(document).off('click', '.btn-entregar-pedido').on('click', '.btn-entregar-pedido', async function () {
+        var $btnEnt = $(this);
+        var idPedido = $btnEnt.attr('data-pedido-id');
+        if (idPedido && navigator.onLine && typeof marcarPedidoEntregadoNube === 'function') {
+            $btnEnt.prop('disabled', true).text('Actualizando...');
+            var resEnt = await marcarPedidoEntregadoNube(idPedido);
+            if (resEnt && resEnt.ok) {
+                mostrarToast('PEDIDO ENTREGADO', 'Orden marcada como entregada correctamente.', false);
+                registrarEvento('GESTION PEDIDOS', 'Pedido entregado: ' + idPedido);
+                await cargarPedidosGestion();
+                if (sesionActual && sesionActual.rol === 'admin') {
+                    await cargarPanelAdminEjecutivo();
+                }
+                return;
+            }
+            $btnEnt.prop('disabled', false).text('Marcar Entregado');
+        }
+    });
+
+    $(document).off('click', '#btn-refrescar-actividad').on('click', '#btn-refrescar-actividad', function () {
+        cargarPanelAdminEjecutivo();
+    });
+
+    $(document).off('click', '#btn-refrescar-reservas').on('click', '#btn-refrescar-reservas', function () {
+        cargarReservasStaff();
+    });
+
+    $(document).off('click', '#btn-refrescar-pedidos').on('click', '#btn-refrescar-pedidos', function () {
+        cargarPedidosGestion();
+    });
+
+    $(document).off('click', '#btn-sincronizar-fifo-manual').on('click', '#btn-sincronizar-fifo-manual', function () {
+        sincronizarColaPendiente();
+    });
+
+    $(document).off('change', '#filtro-tipo-actividad').on('change', '#filtro-tipo-actividad', function () {
+        renderizarFeedActividadFiltrado();
+    });
+
+    $(document).off('input keyup', '#filtro-cliente-actividad').on('input keyup', '#filtro-cliente-actividad', function () {
+        renderizarFeedActividadFiltrado();
     });
 
     $(document).off('click', '#btn-limpiar-log').on('click', '#btn-limpiar-log', function () {
@@ -1002,23 +2016,27 @@ $(document).ready(function () {
         registrarEvento('SISTEMA ADMIN', 'Bitacora purgada por administrador.');
     });
 
-    $(window).off('online offline').on('online offline', function () {
+    // Semana 2 - Sincronizacion Offline FIFO
+    $(window).off('online offline').on('online offline', async function () {
         actualizarEstadoRed();
         if (navigator.onLine) {
-            sincronizarColaPendiente();
+            await sincronizarColaPendiente();
         } else {
             registrarEvento('RED OFFLINE', 'Conexion perdida. Modo Store & Forward activo.');
             mostrarToast('MODO OFFLINE ACTIVO', 'Los pedidos se guardaran localmente en cola FIFO.', true);
         }
     });
 
-    verificarSesionInicial();
-    actualizarEstadoRed();
     inicializarEstacionesConsolas();
     inicializarEstacionesPC();
     inicializarEstacionesArcades();
+    verificarSesionInicial();
+    actualizarEstadoRed();
     cargarCatalogoSnacks();
-    iniciarCronometroOferta10Minutos();
+    cargarPromocionCliente();
     actualizarMetricasAdmin();
+    if (navigator.onLine) {
+        sincronizarColaPendiente();
+    }
     registrarEvento('SISTEMA PWA', 'HUD Movil Offline-First inicializado');
 });

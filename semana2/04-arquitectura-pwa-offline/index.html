@@ -4,10 +4,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Semana 2 - Redireccion Movil PWA -->
+    <script>
+        (function () {
+            var esMovil = window.innerWidth <= 1024 || /Android|iPhone|iPad/i.test(navigator.userAgent);
+            if (esMovil && window.location.pathname.indexOf('/pwa/') === -1) {
+                var urlBase = window.location.href.split('#')[0].split('?')[0].replace(/\/index\.html$|\/$/, '');
+                window.location.replace(urlBase + '/pwa/index.html');
+            }
+        })();
+    </script>
     <meta name="theme-color" content="#00c8ff">
     <title>LevelUp Arcade Bar - Semana 2 Paso 04: Arquitectura PWA Offline-First</title>
+    <!-- Semana 2 - Manifiesto PWA -->
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="styles.css">
+    <!-- Semana 2 - Registro Service Worker -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function () {
@@ -18,6 +30,7 @@
 </head>
 
 <body>
+    <!-- Semana 2 - Notificaciones Toast -->
     <div id="toast-alert">
         <div class="toast-titulo" id="toast-titulo">NOTIFICACION</div>
         <div class="toast-cuerpo" id="toast-cuerpo">Mensaje del sistema.</div>
@@ -25,6 +38,7 @@
 
     <header class="barra-superior">
         <div class="marca-ciber">LEVELUP ARCADE BAR</div>
+        <!-- Semana 1 - Menu Hamburguesa -->
         <button type="button" id="btn-hamburguesa" class="btn-hamburguesa" aria-label="Abrir Menu">
             <span class="linea-menu"></span>
             <span class="linea-menu"></span>
@@ -36,6 +50,7 @@
             <a href="#catalogo" class="enlace-nav" data-categoria="consola">Consolas</a>
             <a href="#catalogo" class="enlace-nav" data-categoria="pc">PCs Gamer</a>
             <a href="#catalogo-snacks" class="enlace-nav" data-categoria="snack">Snacks</a>
+            <!-- Semana 1 - Modo Oscuro y Claro -->
             <button type="button" id="btn-tema" class="btn-neon">Cambiar Modo</button>
         </nav>
     </header>
@@ -94,6 +109,7 @@
             <input type="text" id="buscador-vivo" placeholder="Buscar PS5, Xbox, RTX, KOF, Hamburguesa, Pizza...">
         </section>
 
+        <!-- Semana 1 - Filtro de Catalogo por Dataset -->
         <div class="barra-filtros">
             <button type="button" class="btn-filtro activo" data-categoria="todos" data-tema="">Todos</button>
             <button type="button" class="btn-filtro" data-categoria="consola" data-tema="playstation">Consolas PS5</button>
@@ -179,6 +195,7 @@
         </section>
     </main>
 
+    <!-- Semana 2 - Modal Checkout Temporizador 30s -->
     <div id="modal-confirmacion">
         <div class="modal-contenido">
             <div class="modal-header">

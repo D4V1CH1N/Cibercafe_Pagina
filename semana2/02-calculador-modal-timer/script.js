@@ -1,3 +1,4 @@
+// Semana 1 - Inicializacion DOM y Eventos
 $(document).ready(function () {
     var totalOrden = 0;
     var contadorLikes = 0;
@@ -25,6 +26,7 @@ $(document).ready(function () {
         }
     };
 
+    // Semana 1 - Bitacora Dia 1 Registro DOM
     function registrarBitacora(tipoEvento, detalleEvento) {
         var horaTexto = new Date().toLocaleTimeString();
         var $linea = $('<div>').addClass('linea-log').text('[' + horaTexto + '] [' + tipoEvento + '] ' + detalleEvento);
@@ -57,15 +59,18 @@ $(document).ready(function () {
         return subtotalCalculado;
     }
 
+    // Semana 1 - Modo Oscuro y Claro
     $('#btn-tema').on('click', function () {
         $('body').toggleClass('modo-claro');
         registrarBitacora('TEMA VISUAL', $('body').hasClass('modo-claro') ? 'Modo Claro' : 'Modo Oscuro');
     });
 
+    // Semana 1 - Menu Hamburguesa
     $('#btn-hamburguesa').on('click', function () {
         $('#nav-menu').toggleClass('show');
     });
 
+    // Semana 1 - Filtro de Catalogo por Dataset
     $('.btn-filtro').on('click', function () {
         $('.btn-filtro').removeClass('activo');
         $(this).addClass('activo');
@@ -222,6 +227,7 @@ $(document).ready(function () {
         $('#contador-likes').text(contadorLikes);
     });
 
+    // Semana 1 - Bitacora Dia 1 Bubbling Dblclick
     $('.card').on('dblclick', function () {
         contadorLikes += 2;
         $('#contador-likes').text(contadorLikes);

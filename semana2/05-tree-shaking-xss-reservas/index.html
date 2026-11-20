@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Semana 2 - Redireccion Movil PWA -->
+    <script>
+        (function () {
+            var esMovil = window.innerWidth <= 1024 || /Android|iPhone|iPad/i.test(navigator.userAgent);
+            if (esMovil && window.location.pathname.indexOf('/pwa/') === -1) {
+                var urlBase = window.location.href.split('#')[0].split('?')[0].replace(/\/index\.html$|\/$/, '');
+                window.location.replace(urlBase + '/pwa/index.html');
+            }
+        })();
+    </script>
+    <meta name="theme-color" content="#00c8ff">
+    <title>LevelUp Arcade Bar - Semana 2 Paso 05: Tree Shaking, XSS y Reservas</title>
+    <!-- Semana 2 - Manifiesto PWA -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+    <!-- Semana 2 - Registro Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('sw.js');
+            });
+        }
+    </script>
+</head>
+
+<body>
+    <!-- Semana 2 - Notificaciones Toast -->
+    <div id="toast-alert">
+        <div class="toast-titulo" id="toast-titulo">NOTIFICACION</div>
+        <div class="toast-cuerpo" id="toast-cuerpo">Mensaje del sistema.</div>
+    </div>
+
+    <header class="barra-superior">
+        <div class="marca-ciber">LEVELUP ARCADE BAR</div>
+        <!-- Semana 1 - Menu Hamburguesa -->
+        <button type="button" id="btn-hamburguesa" class="btn-hamburguesa" aria-label="Abrir Menu">
+            <span class="linea-menu"></span>
+            <span class="linea-menu"></span>
+            <span class="linea-menu"></span>
+        </button>
+        <nav id="nav-menu" class="nav-principal">
+            <span id="estado-red-hud" class="estado-red-badge">ONLINE</span>
+            <a href="#catalogo" class="enlace-nav" data-categoria="todos">Inicio</a>
+            <a href="#catalogo" class="enlace-nav" data-categoria="consola">Consolas</a>
+            <a href="#catalogo" class="enlace-nav" data-categoria="pc">PCs Gamer</a>
+            <a href="#catalogo-snacks" class="enlace-nav" data-categoria="snack">Snacks</a>
+            <!-- Semana 1 - Modo Oscuro y Claro -->
+            <button type="button" id="btn-tema" class="btn-neon">Cambiar Modo</button>
+        </nav>
+    </header>
+
+    <main class="contenedor-ciber">
+        <section class="hero-ciber">
+            <div>
+                <h1>CENTRO GAMING Y ARCADE BAR</h1>
+                <p>Arquitectura PWA Offline-First: Service Worker Cache-First, detector navigator.onLine y cola FIFO Store &amp; Forward.</p>
+            </div>
+            <div class="resumen-hud">
+                <span>Total: <strong id="total-orden">0 Bs</strong></span>
+                <button type="button" id="btn-abrir-modal">Confirmar Pedido</button>
+                <span>Likes: <strong id="contador-likes">0</strong></span>
+                <button type="button" id="btn-like">Dar Like</button>
+            </div>
+        </section>
+
+        <section class="panel-doble-grid" style="margin-bottom: 18px;">
+            <div class="bloque-herramienta">
+                <h2>FILTRO EN CASCADA DE 3 CAPAS</h2>
+                <select id="capa1">
+                    <option value="">1. Selecciona Zona...</option>
+                    <option value="consolas">Consolas</option>
+                    <option value="pcs">PCs Gamer</option>
+                    <option value="arcades">Arcades</option>
+                    <option value="snacks">Snacks</option>
+                </select>
+                <select id="capa2" disabled>
+                    <option value="">2. Plataforma...</option>
+                </select>
+                <select id="capa3" disabled>
+                    <option value="">3. Modelo...</option>
+                </select>
+                <div id="resultadoFiltro" class="resultado-filtro">Elige una zona para comenzar.</div>
+            </div>
+
+            <div class="bloque-herramienta">
+                <h2>CALCULADOR DINAMICO EN VIVO</h2>
+                <label for="calc-estacion">Estacion Base:</label>
+                <select id="calc-estacion" class="input-calc">
+                    <option value="15">PlayStation 5 (15 Bs/h)</option>
+                    <option value="25">PC RTX 4080 Ultra (25 Bs/h)</option>
+                    <option value="10">Arcade Clasica (10 Bs/h)</option>
+                </select>
+                <label for="calc-horas">Horas de Sesion:</label>
+                <input type="number" id="calc-horas" class="input-calc" value="1" min="1" max="12">
+                <label for="calc-controles">Controles Adicionales (3 Bs c/u):</label>
+                <input type="number" id="calc-controles" class="input-calc" value="0" min="0" max="4">
+                <div class="resultado-filtro">Subtotal Estimado: <strong id="calc-subtotal">15 Bs</strong></div>
+                <button type="button" id="btn-agregar-calc">Agregar Calculo al Pedido</button>
+            </div>
+        </section>
+
+        <section class="barra-buscador">
+            <input type="text" id="buscador-vivo" placeholder="Buscar PS5, Xbox, RTX, KOF, Hamburguesa, Pizza...">
+        </section>
+
+        <!-- Semana 1 - Filtro de Catalogo por Dataset -->
+        <div class="barra-filtros">
+            <button type="button" class="btn-filtro activo" data-categoria="todos" data-tema="">Todos</button>
+            <button type="button" class="btn-filtro" data-categoria="consola" data-tema="playstation">Consolas PS5</button>
+            <button type="button" class="btn-filtro" data-categoria="pc" data-tema="pc">PCs Gamer</button>
+            <button type="button" class="btn-filtro" data-categoria="arcade" data-tema="arcade">Arcades</button>
+            <button type="button" class="btn-filtro" data-categoria="snack" data-tema="comida">Snacks</button>
+        </div>
+
+        <section id="catalogo" class="lista-acordeones">
+            <div class="bloque-plataforma card" data-categoria="consola" data-titulo="PlayStation 5">
+                <button type="button" class="accordion-btn" data-tema="playstation">PlayStation 5 - 10 Estaciones (15 Bs/h)</button>
+                <div class="accordion-panel">
+                    <p>4K 120Hz con EA Sports FC 27, Tekken 8 y Mortal Kombat 1.</p>
+                    <select class="select-variante" data-nombre="PlayStation 5">
+                        <option value="15" data-detalle="1-2 Controles">1-2 Controles - 15 Bs/h</option>
+                        <option value="18" data-detalle="3 Controles">3 Controles - 18 Bs/h</option>
+                        <option value="21" data-detalle="4 Controles">4 Controles - 21 Bs/h</option>
+                    </select>
+                    <div class="precio-card">15 Bs</div>
+                    <button type="button" class="btn-agregar-total" data-nombre="PlayStation 5">Agregar al Total</button>
+                </div>
+            </div>
+
+            <div class="bloque-plataforma card" data-categoria="pc" data-titulo="PC RTX 4080 Ultra">
+                <button type="button" class="accordion-btn" data-tema="pc">Zona PC Gamer RTX - 20 Equipos (Desde 15 Bs/h)</button>
+                <div class="accordion-panel">
+                    <p>Equipos Ultra RTX 4080 240Hz, Alta RTX 4070 y Media RTX 4060.</p>
+                    <select class="select-variante" data-nombre="PC Gamer RTX">
+                        <option value="25" data-detalle="Ultra RTX 4080">Ultra RTX 4080 - 25 Bs/h</option>
+                        <option value="20" data-detalle="Alta RTX 4070">Alta RTX 4070 - 20 Bs/h</option>
+                        <option value="15" data-detalle="Media RTX 4060">Media RTX 4060 - 15 Bs/h</option>
+                    </select>
+                    <div class="precio-card">25 Bs</div>
+                    <button type="button" class="btn-agregar-total" data-nombre="PC Gamer RTX">Agregar al Total</button>
+                </div>
+            </div>
+
+            <div class="bloque-plataforma card" data-categoria="arcade" data-titulo="Salon Arcade Retro">
+                <button type="button" class="accordion-btn" data-tema="arcade">Salon Arcade Retro - 25 Cabinas Clasicas</button>
+                <div class="accordion-panel">
+                    <p>The King of Fighters 98, Metal Slug X y Street Fighter II.</p>
+                    <select class="select-variante" data-nombre="Gabinete Arcade">
+                        <option value="10" data-detalle="Por Hora">Por Hora - 10 Bs</option>
+                        <option value="10" data-detalle="Pack 5 Fichas">Pack 5 Fichas - 10 Bs</option>
+                        <option value="2" data-detalle="1 Ficha">1 Ficha - 2 Bs</option>
+                    </select>
+                    <div class="precio-card">10 Bs</div>
+                    <button type="button" class="btn-agregar-total" data-nombre="Gabinete Arcade">Agregar al Total</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="catalogo-snacks" class="bloque-herramienta" style="margin-bottom: 24px;">
+            <h2>SNACKS &amp; COMBOS (FETCH JSON + LAZY LOADING)</h2>
+            <div class="grilla-snacks"></div>
+        </section>
+
+        <section class="modulo-reservas bloque-herramienta" style="margin-bottom: 24px;">
+            <h3>Reserva de Sala VIP / Mesa Gamer</h3>
+            <form id="formReserva" class="form-vertical-apilado">
+                <label for="clienteNombre">Nombre o Equipo Gamer:</label>
+                <input type="text" id="clienteNombre" placeholder="Nombre o equipo gamer" required>
+                <label for="salaSelect">Sala o Estacion:</label>
+                <select id="salaSelect">
+                    <option value="Sala VIP PlayStation 5 (20:00 hrs)">Sala VIP PlayStation 5 (20:00 hrs)</option>
+                    <option value="Arena PC Esports 5v5 (21:30 hrs)">Arena PC Esports 5v5 (21:30 hrs)</option>
+                    <option value="Mesa Central Arcade (22:00 hrs)">Mesa Central Arcade (22:00 hrs)</option>
+                </select>
+                <button type="submit" class="btn-accion">Confirmar Reserva de Sala</button>
+            </form>
+            <ul id="listaReservas" class="lista-segura"></ul>
+        </section>
+
+        <section class="panel-doble-grid">
+            <div class="bloque-formulario">
+                <div id="alerta-formulario" class="alerta-bloque-top"></div>
+                <h2>SOLICITAR RESERVA O CONSULTA</h2>
+                <form id="form-consulta" novalidate>
+                    <label for="campo-nombre">Nombre Completo:</label>
+                    <input type="text" id="campo-nombre" placeholder="Ej. Alex Mercer">
+
+                    <label for="campo-correo">Correo Electronico:</label>
+                    <input type="email" id="campo-correo" placeholder="jugador@correo.com">
+
+                    <label for="campo-mensaje">Detalle de Estacion o Consulta:</label>
+                    <input type="text" id="campo-mensaje" placeholder="Reserva PS5 2 horas">
+
+                    <button type="submit" id="btn-enviar-form">Validar y Enviar</button>
+                </form>
+            </div>
+
+            <div class="bloque-bitacora">
+                <div class="cabecera-bitacora">
+                    <h2>BITACORA OFFLINE-FIRST</h2>
+                    <button type="button" id="btn-limpiar-log">Limpiar</button>
+                </div>
+                <div id="log-output" class="consola-eventos"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Semana 2 - Modal Checkout Temporizador 30s -->
+    <div id="modal-confirmacion">
+        <div class="modal-contenido">
+            <div class="modal-header">
+                <h2>CONFIRMACION DE CHECKOUT</h2>
+                <span class="timer-caja">Expira: <strong id="timer-modal">00:30</strong></span>
+            </div>
+            <form id="form-checkout">
+                <p>Total a pagar: <strong id="modal-total">0 Bs</strong></p>
+                <label for="checkout-nombre">Nombre del Jugador:</label>
+                <input type="text" id="checkout-nombre" placeholder="Ej. Alex Mercer" required>
+                <label for="checkout-modalidad">Modalidad:</label>
+                <select id="checkout-modalidad">
+                    <option value="Reserva para llegar al local">Reserva para llegar al local</option>
+                    <option value="Pedido a mi estacion">Pedido a mi estacion</option>
+                </select>
+                <label for="checkout-pago">Forma de Pago:</label>
+                <select id="checkout-pago">
+                    <option value="Efectivo">Efectivo</option>
+                    <option value="Pago QR">Pago QR</option>
+                </select>
+                <div class="modal-acciones">
+                    <button type="submit">Confirmar</button>
+                    <button type="button" id="btn-cerrar-modal">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer class="footer-ciber">
+        <div class="footer-redes">
+            <span>Redes Sociales:</span>
+            <a href="#">Facebook</a>
+            <a href="#">Instagram</a>
+            <a href="https://wa.me/59100000000" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+        </div>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,92 @@
+/* Semana 3 - Mobile-First CSS Grid y Flexbox */
+.panel-showcase-bem {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+    margin-top: 12px;
+}
+
+.barra-demo {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px;
+    background: rgba(8, 14, 32, 0.78);
+    border: 1px solid rgba(0, 200, 255, 0.3);
+    border-radius: 12px;
+}
+
+body.modo-claro .barra-demo {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: #cbd5e1;
+}
+
+.barra-demo__titulo {
+    margin: 0;
+    font-family: 'Orbitron', Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: #ffcc00;
+}
+
+body.modo-claro .barra-demo__titulo {
+    color: #0369a1;
+}
+
+.barra-demo__boton {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1.5px solid #ffcc00;
+    background: rgba(255, 204, 0, 0.14);
+    color: #ffcc00;
+    font-family: 'Orbitron', Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+body.modo-claro .barra-demo__boton {
+    border-color: #0284c7;
+    background: rgba(2, 132, 199, 0.1);
+    color: #0284c7;
+}
+
+.catalogo-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.card-item__cuerpo {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 10px;
+    height: 100%;
+}
+
+/* Semana 3 - Simulador Vista Movil y Responsive Grid */
+@media (min-width: 768px) {
+    .barra-demo {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .catalogo-grid {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+}
+
+.catalogo-grid.catalogo-grid--sim-movil {
+    grid-template-columns: 1fr;
+    max-width: 380px;
+    margin: 0 auto;
+}

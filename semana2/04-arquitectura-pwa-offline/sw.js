@@ -1,4 +1,4 @@
-const NOMBRE_CACHE = 'levelup-semana2-paso04-v1';
+const NOMBRE_CACHE = 'levelup-semana2-paso04-v2';
 const ARCHIVOS_ESTATICOS = [
     'index.html',
     'styles.css',
@@ -9,6 +9,7 @@ const ARCHIVOS_ESTATICOS = [
     'icons/icon-512.png'
 ];
 
+// Semana 2 - Instalacion Service Worker
 self.addEventListener('install', function (eventoInstall) {
     eventoInstall.waitUntil(
         caches.open(NOMBRE_CACHE).then(function (cacheAbierta) {
@@ -18,6 +19,7 @@ self.addEventListener('install', function (eventoInstall) {
     self.skipWaiting();
 });
 
+// Semana 2 - Activacion y Limpieza Cache
 self.addEventListener('activate', function (eventoActivate) {
     eventoActivate.waitUntil(
         caches.keys().then(function (listaCaches) {
@@ -34,6 +36,7 @@ self.addEventListener('activate', function (eventoActivate) {
     self.clients.claim();
 });
 
+// Semana 2 - Estrategia Cache Offline
 self.addEventListener('fetch', function (eventoFetch) {
     if (eventoFetch.request.method !== 'GET') {
         return;
