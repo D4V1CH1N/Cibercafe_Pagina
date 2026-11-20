@@ -100,7 +100,7 @@ input.toggle-hidden[type="checkbox"],
     pointer-events: auto;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     padding: 4px 10px;
     background: rgba(9, 13, 28, 0.78);
     backdrop-filter: blur(14px);
@@ -172,7 +172,7 @@ body.modo-claro .pill-zona-tag {
 .pill-monedas-box {
     display: flex;
     align-items: center;
-    flex: 0 1 auto;
+    flex: 1 1 auto;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -180,8 +180,8 @@ body.modo-claro .pill-zona-tag {
     background: rgba(0, 200, 255, 0.12);
     border: 1px solid rgba(0, 200, 255, 0.3);
     border-radius: 16px;
-    padding: 3px 8px;
-    font-size: 11px;
+    padding: 3px 7px;
+    font-size: 0.72rem;
     font-weight: 700;
     white-space: nowrap;
 }
@@ -227,7 +227,7 @@ body.modo-claro .monto-oro-pill {
     pointer-events: auto;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     flex-shrink: 0;
 }
 
@@ -1872,9 +1872,9 @@ select {
 
 .estado-red-badge-movil {
     flex-shrink: 0;
-    padding: 4px 8px;
+    padding: 3px 6px;
     border-radius: 999px;
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     font-weight: 800;
     font-family: 'Orbitron', sans-serif;
     border: 1px solid #00ff88;
@@ -2936,7 +2936,7 @@ body.modo-claro #form-editor-promo select {
 
     .pill-perfil-flotante {
         padding: 4px 8px;
-        gap: 6px;
+        gap: 5px;
     }
 
     .avatar-box {
@@ -2945,7 +2945,7 @@ body.modo-claro #form-editor-promo select {
 
     .pill-monedas-box {
         padding: 2px 6px;
-        font-size: 10px;
+        font-size: 0.72rem;
     }
 
     .pill-monedas-box .moneda-label {
@@ -2965,15 +2965,14 @@ body.modo-claro #form-editor-promo select {
         padding: 0 10px;
         font-size: 10px;
     }
-
-    .fab-carrito,
-    .fab-lateral-group {
-        bottom: 74px;
-    }
 }
 
+.img-snack,
 .img-snack-dinamica,
 .card-item__imagen {
+    position: relative;
+    z-index: 2;
+    pointer-events: auto;
     cursor: zoom-in;
 }
 
@@ -2981,7 +2980,7 @@ body.modo-claro #form-editor-promo select {
     display: none;
     position: fixed;
     inset: 0;
-    z-index: 800;
+    z-index: 450;
     background: rgba(3, 6, 16, 0.88);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
@@ -3060,7 +3059,7 @@ body.modo-claro .lightbox-visor__titulo {
 
 .lightbox-visor__foto {
     max-width: 92vw;
-    max-height: 82vh;
+    max-height: 78vh;
     width: auto;
     height: auto;
     object-fit: contain;

@@ -2467,6 +2467,9 @@ body.modo-claro .form-vertical-apilado select {
 
 .img-snack-dinamica,
 .card-item__imagen {
+    position: relative;
+    z-index: 2;
+    pointer-events: auto;
     cursor: zoom-in;
 }
 
@@ -2474,7 +2477,7 @@ body.modo-claro .form-vertical-apilado select {
     display: none;
     position: fixed;
     inset: 0;
-    z-index: 800;
+    z-index: 450;
     background: rgba(3, 6, 16, 0.88);
     backdrop-filter: blur(8px);
     padding: 16px;
@@ -2550,7 +2553,7 @@ body.modo-claro .lightbox-visor__titulo {
 
 .lightbox-visor__foto {
     max-width: 92vw;
-    max-height: 82vh;
+    max-height: 78vh;
     width: auto;
     height: auto;
     object-fit: contain;

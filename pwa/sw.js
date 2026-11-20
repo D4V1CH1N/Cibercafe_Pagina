@@ -1,5 +1,5 @@
 // Semana 2 - Arquitectura PWA Offline-First
-const NOMBRE_CACHE_PWA = 'levelup-pwa-v15';
+const NOMBRE_CACHE_PWA = 'levelup-pwa-v16';
 const RECURSOS_PWA = [
     './',
     'index.html',

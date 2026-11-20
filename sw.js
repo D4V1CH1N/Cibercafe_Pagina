@@ -1,5 +1,5 @@
 // Semana 2 - Arquitectura PWA Offline-First
-const NOMBRE_CACHE_ESTATICO = 'levelup-arcade-v14';
+const NOMBRE_CACHE_ESTATICO = 'levelup-arcade-v15';
 const RECURSOS_PRECACHE = [
     './',
     'index.html',

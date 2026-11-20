@@ -1,5 +1,5 @@
 // Semana 2 - Arquitectura PWA Offline-First
-const NOMBRE_CACHE_ESTATICO = 'levelup-semana3-paso04-v4';
+const NOMBRE_CACHE_ESTATICO = 'levelup-semana3-paso04-v5';
 const RECURSOS_PRECACHE = [
     './',
     'index.html',

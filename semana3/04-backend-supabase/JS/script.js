@@ -2167,8 +2167,9 @@ $(document).ready(function () {
         }
     }
 
-    $(document).off('click', 'img:not(#lightboxImagenFoto)').on('click', 'img:not(#lightboxImagenFoto)', function () {
+    $(document).off('click', 'img').on('click', 'img', function () {
         var nodoImg = this;
+        if (nodoImg.closest('#lightboxImagenVisor')) return;
         var rutaImg = nodoImg.getAttribute('src') || '';
         if (!rutaImg.trim()) return;
 
