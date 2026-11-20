@@ -81,14 +81,18 @@ input.toggle-hidden[type="checkbox"],
 
 .pwa-top-widget-bar {
     position: fixed;
-    top: 10px;
-    left: 10px;
-    right: 10px;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 8px 10px 4px 10px;
     z-index: 90;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     pointer-events: none;
 }
 
@@ -96,16 +100,17 @@ input.toggle-hidden[type="checkbox"],
     pointer-events: auto;
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 5px 12px;
+    gap: 6px;
+    padding: 4px 10px;
     background: rgba(9, 13, 28, 0.78);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     border: 1px solid rgba(0, 200, 255, 0.35);
     border-radius: 30px;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
-    flex: 1;
+    flex: 1 1 auto;
     min-width: 0;
+    overflow: hidden;
     max-width: none;
 }
 
@@ -130,6 +135,8 @@ body.modo-claro .pill-perfil-flotante {
     display: flex;
     flex-direction: column;
     line-height: 1.1;
+    flex: 1 1 0;
+    min-width: 0;
     overflow: hidden;
 }
 
@@ -140,7 +147,8 @@ body.modo-claro .pill-perfil-flotante {
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
-    max-width: 80px;
+    min-width: 0;
+    max-width: 100%;
 }
 
 body.modo-claro .jugador-nombre {
@@ -151,6 +159,10 @@ body.modo-claro .jugador-nombre {
     font-size: 9px;
     color: #ffcc00;
     font-weight: 700;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    min-width: 0;
 }
 
 body.modo-claro .pill-zona-tag {
@@ -160,6 +172,10 @@ body.modo-claro .pill-zona-tag {
 .pill-monedas-box {
     display: flex;
     align-items: center;
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
     gap: 3px;
     background: rgba(0, 200, 255, 0.12);
     border: 1px solid rgba(0, 200, 255, 0.3);
@@ -211,7 +227,8 @@ body.modo-claro .monto-oro-pill {
     pointer-events: auto;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    flex-shrink: 0;
 }
 
 .btn-top-action {
@@ -653,7 +670,7 @@ body.modo-claro .fab-whatsapp {
     position: relative;
     z-index: 10;
     flex: 1;
-    padding: 84px 12px 96px 12px;
+    padding: 80px 12px 156px 12px;
     height: 100dvh;
     min-height: 100dvh;
     display: flex;
@@ -746,11 +763,13 @@ body.modo-claro .tab-rol.activo {
     display: flex;
     flex-direction: column;
     gap: 14px;
+    padding-bottom: 72px;
 }
 
 .alerta-roja-container {
     width: 100%;
     position: relative;
+    padding-top: 6px;
 }
 
 .btn-alerta-roja {
@@ -1852,9 +1871,10 @@ select {
 }
 
 .estado-red-badge-movil {
-    padding: 3px 7px;
+    flex-shrink: 0;
+    padding: 4px 8px;
     border-radius: 999px;
-    font-size: 9px;
+    font-size: 0.7rem;
     font-weight: 800;
     font-family: 'Orbitron', sans-serif;
     border: 1px solid #00ff88;
@@ -2905,4 +2925,145 @@ body.modo-claro #form-editor-promo select {
     font-size: 11px;
     font-weight: 700;
     align-self: flex-start;
+}
+
+/* Semana 2 - Cabecera Movil Compacta <= 480px y Lightbox Seguro */
+@media (max-width: 480px) {
+    .pwa-top-widget-bar {
+        padding: 6px 8px 4px 8px;
+        gap: 6px;
+    }
+
+    .pill-perfil-flotante {
+        padding: 4px 8px;
+        gap: 6px;
+    }
+
+    .avatar-box {
+        display: none;
+    }
+
+    .pill-monedas-box {
+        padding: 2px 6px;
+        font-size: 10px;
+    }
+
+    .pill-monedas-box .moneda-label {
+        display: none;
+    }
+
+    .btn-tema-fab {
+        width: 44px;
+        padding: 0;
+    }
+
+    .btn-tema-fab span {
+        display: none;
+    }
+
+    .btn-salir-fab {
+        padding: 0 10px;
+        font-size: 10px;
+    }
+
+    .fab-carrito,
+    .fab-lateral-group {
+        bottom: 74px;
+    }
+}
+
+.img-snack-dinamica,
+.card-item__imagen {
+    cursor: zoom-in;
+}
+
+.lightbox-visor {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 800;
+    background: rgba(3, 6, 16, 0.88);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 16px;
+    align-items: center;
+    justify-content: center;
+}
+
+.lightbox-visor.activo {
+    display: flex;
+}
+
+.lightbox-visor__caja {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    max-width: 94vw;
+    max-height: 92vh;
+    background: rgba(10, 16, 36, 0.96);
+    border: 1.5px solid #00c8ff;
+    border-radius: 16px;
+    padding: 12px;
+    box-shadow: 0 12px 36px rgba(0, 200, 255, 0.35);
+}
+
+body.modo-claro .lightbox-visor__caja {
+    background: #ffffff;
+    border-color: #0284c7;
+    color: #0f172a;
+}
+
+.lightbox-visor__cabecera {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.lightbox-visor__titulo {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 13px;
+    color: #ffcc00;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.modo-claro .lightbox-visor__titulo {
+    color: #0369a1;
+}
+
+.lightbox-visor__cerrar {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1.5px solid #ff2040;
+    background: rgba(255, 32, 64, 0.16);
+    color: #ff2040;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.lightbox-visor__cuerpo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.lightbox-visor__foto {
+    max-width: 92vw;
+    max-height: 82vh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 10px;
+    display: block;
 }

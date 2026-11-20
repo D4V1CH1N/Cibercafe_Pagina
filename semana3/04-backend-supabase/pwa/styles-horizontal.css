@@ -79,6 +79,9 @@ body.modo-claro .side-rail-tab.activo svg {
     top: 8px;
     left: 90px;
     right: 12px;
+    width: auto;
+    max-width: none;
+    padding: 0;
 }
 
 .fab-carrito {

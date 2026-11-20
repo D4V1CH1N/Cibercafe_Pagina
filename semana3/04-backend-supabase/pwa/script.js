@@ -2027,6 +2027,58 @@ $(document).ready(function () {
         }
     });
 
+    // Semana 2 - Visor Modal Lightbox Seguro
+    function cerrarVisorLightboxImagen() {
+        var visorModal = document.getElementById('lightboxImagenVisor');
+        var fotoVisor = document.getElementById('lightboxImagenFoto');
+        if (visorModal) {
+            visorModal.classList.remove('activo');
+        }
+        if (fotoVisor) {
+            fotoVisor.setAttribute('src', '');
+        }
+    }
+
+    $(document).off('click', 'img:not(#lightboxImagenFoto)').on('click', 'img:not(#lightboxImagenFoto)', function () {
+        var nodoImg = this;
+        var rutaImg = nodoImg.getAttribute('src') || '';
+        if (!rutaImg.trim()) return;
+
+        var tarjetaPadre = nodoImg.closest('.card-item, .card-snack, article');
+        var tituloNodo = tarjetaPadre ? tarjetaPadre.querySelector('.card-item__titulo, h3, h4') : null;
+        var descNodo = tarjetaPadre ? tarjetaPadre.querySelector('.card-item__descripcion, p') : null;
+        var textoTitulo = tituloNodo ? tituloNodo.textContent.trim() : (nodoImg.getAttribute('alt') || 'Vista Ampliada');
+        var textoDesc = descNodo ? descNodo.textContent.trim() : '';
+        var encabezadoCompleto = textoDesc ? (textoTitulo + ' - ' + textoDesc) : textoTitulo;
+
+        var visorModal = document.getElementById('lightboxImagenVisor');
+        var fotoVisor = document.getElementById('lightboxImagenFoto');
+        var tituloVisor = document.getElementById('lightboxImagenTitulo');
+        if (!visorModal || !fotoVisor || !tituloVisor) return;
+
+        fotoVisor.setAttribute('src', rutaImg);
+        fotoVisor.setAttribute('alt', textoTitulo);
+        tituloVisor.textContent = encabezadoCompleto;
+        visorModal.classList.add('activo');
+        registrarEvento('VISOR IMAGEN', 'Imagen ampliada: ' + textoTitulo);
+    });
+
+    $(document).off('click', '#btnCerrarLightboxVisor').on('click', '#btnCerrarLightboxVisor', function () {
+        cerrarVisorLightboxImagen();
+    });
+
+    $(document).off('click', '#lightboxImagenVisor').on('click', '#lightboxImagenVisor', function (eventoFondo) {
+        if (eventoFondo.target === eventoFondo.currentTarget) {
+            cerrarVisorLightboxImagen();
+        }
+    });
+
+    $(document).off('keydown.lightbox').on('keydown.lightbox', function (eventoTeclado) {
+        if (eventoTeclado.key === 'Escape') {
+            cerrarVisorLightboxImagen();
+        }
+    });
+
     inicializarEstacionesConsolas();
     inicializarEstacionesPC();
     inicializarEstacionesArcades();

@@ -2424,3 +2424,135 @@ body.modo-claro .form-vertical-apilado select {
     font-weight: 700;
     align-self: flex-start;
 }
+
+/* Semana 2 - Cabecera Movil Compacta y Lightbox Seguro */
+.estado-red-badge {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+    #hud-header {
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 8px 10px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .hud-left {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        gap: 6px;
+    }
+
+    .hud-right {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+    }
+
+    .hud-center {
+        display: none;
+    }
+
+    .estado-red-badge {
+        padding: 4px 8px;
+        font-size: 0.7rem;
+    }
+}
+
+.img-snack-dinamica,
+.card-item__imagen {
+    cursor: zoom-in;
+}
+
+.lightbox-visor {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 800;
+    background: rgba(3, 6, 16, 0.88);
+    backdrop-filter: blur(8px);
+    padding: 16px;
+    align-items: center;
+    justify-content: center;
+}
+
+.lightbox-visor.activo {
+    display: flex;
+}
+
+.lightbox-visor__caja {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    max-width: 94vw;
+    max-height: 92vh;
+    background: rgba(10, 16, 36, 0.96);
+    border: 2px solid #00c8ff;
+    padding: 14px;
+    box-shadow: 0 12px 36px rgba(0, 200, 255, 0.35);
+}
+
+body.modo-claro .lightbox-visor__caja {
+    background: #ffffff;
+    border-color: #0284c7;
+    color: #0f172a;
+}
+
+.lightbox-visor__cabecera {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.lightbox-visor__titulo {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 14px;
+    color: #ffcc00;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.modo-claro .lightbox-visor__titulo {
+    color: #0369a1;
+}
+
+.lightbox-visor__cerrar {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px 14px;
+    border: 2px solid #ff2040;
+    background: rgba(255, 32, 64, 0.16);
+    color: #ff2040;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.lightbox-visor__cuerpo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.lightbox-visor__foto {
+    max-width: 92vw;
+    max-height: 82vh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+}
